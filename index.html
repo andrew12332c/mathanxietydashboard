@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Anxiety & AI Usage Research Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Math Anxiety & AI Usage Research Dashboard</h1>
+            <p class="subtitle">Exploring the relationship between math anxiety and AI tutoring usage</p>
+            <p class="credits">
+                Dashboard created by <a href="https://www.linkedin.com/in/andrew-zhanger/" target="_blank" rel="noopener">Andrew Zhang</a>, 
+                part of the <a href="https://www.etclab.info/" target="_blank" rel="noopener">ETC Lab</a> at UC Irvine
+                <br>
+                Presented at the <a href="https://uciurop.infoready4.com/#learnMore/29117" target="_blank" rel="noopener">UCI Undergraduate Research Symposium</a>
+                <br>
+                Part of a larger research study on AI tutoring systems and student anxiety
+            </p>
+        </header>
+
+        <div class="info-panel">
+            <div class="info-card">
+                <h3>Research Questions</h3>
+                <ul>
+                    <li>Does AI usage reduce state anxiety during math tasks?</li>
+                    <li>Do high-anxiety students benefit more from AI tutors?</li>
+                    <li>What's the relationship between trait vs. state anxiety?</li>
+                    <li>How does AI usage correlate with math performance?</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <h3>Key Metrics</h3>
+                <div id="stats" class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalParticipants">-</div>
+                        <div class="stat-label">Participants</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="avgStateAnxiety">-</div>
+                        <div class="stat-label">Avg State Anxiety</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="avgTraitAnxiety">-</div>
+                        <div class="stat-label">Avg Trait Anxiety</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="avgMathScore">-</div>
+                        <div class="stat-label">Avg Math Score</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <h3>Interactive Controls</h3>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="anxietyFilter">Anxiety Level:</label>
+                    <select id="anxietyFilter">
+                        <option value="all">All Levels</option>
+                        <option value="low">Low Anxiety (≤ 3)</option>
+                        <option value="high">High Anxiety (> 3)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="genderFilter">Gender:</label>
+                    <select id="genderFilter">
+                        <option value="all">All Genders</option>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <button id="resetBtn" class="btn-primary">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="viz-grid">
+            <div class="viz-card">
+                <h3>Trait Anxiety vs State Anxiety</h3>
+                <p class="viz-description">Does baseline math anxiety predict stress during tasks?</p>
+                <canvas id="traitStateChart"></canvas>
+            </div>
+
+            <div class="viz-card">
+                <h3>Math Anxiety by Academic Level</h3>
+                <p class="viz-description">How does anxiety vary across year in school?</p>
+                <canvas id="anxietyByLevelChart"></canvas>
+            </div>
+
+            <div class="viz-card">
+                <h3>State Anxiety Distribution</h3>
+                <p class="viz-description">How anxious were students during the math task?</p>
+                <canvas id="stateDistributionChart"></canvas>
+            </div>
+
+            <div class="viz-card">
+                <h3>Trust in AI vs Math Anxiety</h3>
+                <p class="viz-description">Do anxious students trust AI more or less?</p>
+                <canvas id="trustChart"></canvas>
+            </div>
+
+            <div class="viz-card full-width">
+                <h3>Distribution: Trait Anxiety Scores</h3>
+                <p class="viz-description">Overall distribution of math anxiety in the sample</p>
+                <canvas id="distributionChart"></canvas>
+            </div>
+
+            <div class="viz-card full-width">
+                <h3>Interactive Scatter: Math Score vs Anxiety (Hover for details)</h3>
+                <p class="viz-description">Each dot is a student - AI users in blue, non-users in orange</p>
+                <div id="scatterPlot"></div>
+            </div>
+        </div>
+
+        <div class="insights-panel">
+            <h3>Key Findings</h3>
+            <div id="insights" class="insights-grid">
+                <!-- Dynamically filled by JS -->
+            </div>
+        </div>
+
+        <footer>
+            <p>Research Dashboard - Math Anxiety & AI Tutoring Study - 2025</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

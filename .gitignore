@@ -1,0 +1,40 @@
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# R Project Files
+.Rproj.user/
+.Rhistory
+*.Rproj
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+
+# Server launcher files (not needed for GitHub Pages)
+start_server.bat
+start_server.ps1
+
+# Optional: Documentation files (uncomment if you don't want to include)
+# QUICK_START.md
+# VARIABLES.md
+# GITHUB_DEPLOYMENT.md
+# setup_check.html
+
+# R Markdown intermediate files
+vertopal.com_mathcolab(2).rmd
+
+# Scripts folder (if contains private scripts)
+scripts/
+
+# Node modules (if you add any)
+node_modules/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

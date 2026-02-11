@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Setup Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #e2e8f0;
+        }
+        
+        .check-item.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .check-item.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .check-item.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .check-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .check-text {
+            flex: 1;
+        }
+        
+        .check-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .check-desc {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+        
+        .action-buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        
+        .summary {
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #2563eb;
+        }
+        
+        .summary h3 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Setup Checker</h1>
+        <p class="subtitle">Verifying your installation...</p>
+        
+        <div class="summary">
+            <h3>Setup Progress</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+            <p id="progressText">Checking files...</p>
+        </div>
+        
+        <div id="checks">
+            <div class="loading">Performing checks...</div>
+        </div>
+        
+        <div class="action-buttons" id="actions" style="display: none;">
+            <a href="index.html" class="btn btn-primary">Open Dashboard</a>
+            <a href="README.md" class="btn btn-secondary">View README</a>
+            <a href="VARIABLES.md" class="btn btn-secondary">Variable Guide</a>
+        </div>
+    </div>
+    
+    <script>
+        const checks = [
+            {
+                name: 'HTML File',
+                desc: 'Main dashboard file',
+                test: async () => {
+                    try {
+                        const response = await fetch('index.html', { method: 'HEAD' });
+                        return response.ok;
+                    } catch {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: 'CSS Stylesheet',
+                desc: 'Styling and layout',
+                test: async () => {
+                    try {
+                        const response = await fetch('styles.css', { method: 'HEAD' });
+                        return response.ok;
+                    } catch {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: 'JavaScript Code',
+                desc: 'Dashboard functionality',
+                test: async () => {
+                    try {
+                        const response = await fetch('script.js', { method: 'HEAD' });
+                        return response.ok;
+                    } catch {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: 'Combined Data CSV',
+                desc: 'data/combined_output.csv',
+                test: async () => {
+                    try {
+                        const response = await fetch('data/combined_output.csv', { method: 'HEAD' });
+                        return response.ok;
+                    } catch {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: 'W3 Survey Data',
+                desc: 'data/sp25mathanxietyw3survey.csv',
+                test: async () => {
+                    try {
+                        const response = await fetch('data/sp25mathanxietyw3survey.csv', { method: 'HEAD' });
+                        return response.ok;
+                    } catch {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: 'W5 Survey Data',
+                desc: 'data/sp25w5survey-and-mathscores.csv',
+                test: async () => {
+                    try {
+                        const response = await fetch('data/sp25w5survey-and-mathscores.csv', { method: 'HEAD' });
+                        return response.ok;
+                    } catch {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: 'Chart.js Library',
+                desc: 'External charting library',
+                test: async () => {
+                    return typeof Chart !== 'undefined';
+                }
+            },
+            {
+                name: 'D3.js Library',
+                desc: 'External visualization library',
+                test: async () => {
+                    return typeof d3 !== 'undefined';
+                }
+            }
+        ];
+        
+        async function runChecks() {
+            const container = document.getElementById('checks');
+            container.innerHTML = '';
+            
+            let passed = 0;
+            const total = checks.length;
+            
+            for (let i = 0; i < checks.length; i++) {
+                const check = checks[i];
+                const result = await check.test();
+                
+                const checkItem = document.createElement('div');
+                checkItem.className = `check-item ${result ? 'success' : 'error'}`;
+                
+                checkItem.innerHTML = `
+                    <div class="check-icon">${result ? '[OK]' : '[X]'}</div>
+                    <div class="check-text">
+                        <div class="check-title">${check.name}</div>
+                        <div class="check-desc">${check.desc}</div>
+                    </div>
+                `;
+                
+                container.appendChild(checkItem);
+                
+                if (result) passed++;
+                
+                // Update progress
+                const progress = ((i + 1) / total) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = 
+                    `Checked ${i + 1} of ${total} items... (${passed} passed)`;
+                
+                // Small delay for visual effect
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Show summary
+            const percentage = (passed / total) * 100;
+            document.getElementById('progressText').innerHTML = 
+                `<strong>Setup ${percentage === 100 ? 'Complete' : 'Incomplete'}: ${passed}/${total} checks passed</strong>`;
+            
+            // Show actions if mostly ready
+            if (percentage >= 50) {
+                document.getElementById('actions').style.display = 'flex';
+            }
+            
+            // Add recommendation
+            if (percentage < 100) {
+                const warning = document.createElement('div');
+                warning.className = 'check-item warning';
+                warning.innerHTML = `
+                    <div class="check-icon">[!]</div>
+                    <div class="check-text">
+                        <div class="check-title">Action Required</div>
+                        <div class="check-desc">
+                            Some files are missing. Please ensure all files are in place:
+                            <ul style="margin-top: 10px; padding-left: 20px;">
+                                <li>Core files: index.html, styles.css, script.js</li>
+                                <li>Data folder with CSV files</li>
+                                <li>Run from a web server (not as file://)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(warning);
+            } else {
+                const success = document.createElement('div');
+                success.className = 'check-item success';
+                success.innerHTML = `
+                    <div class="check-icon">[READY]</div>
+                    <div class="check-text">
+                        <div class="check-title">All Systems Go!</div>
+                        <div class="check-desc">
+                            Your dashboard is ready to use. Click "Open Dashboard" below to get started!
+                        </div>
+                    </div>
+                `;
+                container.appendChild(success);
+            }
+        }
+        
+        // Load external libraries for testing
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        async function init() {
+            try {
+                await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+                await loadScript('https://d3js.org/d3.v7.min.js');
+            } catch (e) {
+                console.warn('Could not load external libraries');
+            }
+            
+            runChecks();
+        }
+        
+        init();
+    </script>
+</body>
+</html>

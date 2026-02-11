@@ -1,0 +1,1644 @@
+---
+jupyter:
+  colab:
+  kernelspec:
+    display_name: R
+    name: ir
+  language_info:
+    name: R
+  nbformat: 4
+  nbformat_minor: 0
+---
+
+``` python
+library(ggplot2)
+library(tidyr)
+library(stats)
+install.packages("dplyr")
+library(dplyr)
+install.packages("tidyverse")
+library(tidyverse)
+library(readr)
+install.packages("psych")
+library(psych)
+install.packages("likert")
+library(likert)
+install.packages("Hmisc")
+library(Hmisc)   # for rcorr()
+install.packages("knitr")
+library(knitr)   # for neat table output
+
+#install.packages("Hmisc")
+```
+
+::: {.output .stream .stderr}
+    Installing package into ‘/usr/local/lib/R/site-library’
+    (as ‘lib’ is unspecified)
+
+
+    Attaching package: ‘dplyr’
+
+
+    The following objects are masked from ‘package:stats’:
+
+        filter, lag
+
+
+    The following objects are masked from ‘package:base’:
+
+        intersect, setdiff, setequal, union
+
+
+    Installing package into ‘/usr/local/lib/R/site-library’
+    (as ‘lib’ is unspecified)
+
+    ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+    ✔ forcats   1.0.1     ✔ readr     2.1.6
+    ✔ lubridate 1.9.4     ✔ stringr   1.6.0
+    ✔ purrr     1.2.0     ✔ tibble    3.3.0
+    ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ✖ dplyr::filter() masks stats::filter()
+    ✖ dplyr::lag()    masks stats::lag()
+    ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+    Installing package into ‘/usr/local/lib/R/site-library’
+    (as ‘lib’ is unspecified)
+
+    also installing the dependencies ‘mnormt’, ‘GPArotation’
+
+
+
+    Attaching package: ‘psych’
+
+
+    The following objects are masked from ‘package:ggplot2’:
+
+        %+%, alpha
+
+
+    Installing package into ‘/usr/local/lib/R/site-library’
+    (as ‘lib’ is unspecified)
+
+    also installing the dependencies ‘reshape2’, ‘gridExtra’, ‘plyr’
+:::
+:::
+
+::: {.cell .code collapsed="true" id="mX7YPHt7Bu6L"}
+``` python
+system("ls", TRUE)
+# https://drive.google.com/open?id=12uRyLU-aAdInBtkVubhI4l3PmbYIo5aE
+#https://drive.google.com/file/d/1RdzxL4cjnV3D-MRVCofKBWPOntR3DQ4s/view?usp=drive_link
+
+system("gdown --id 1RdzxL4cjnV3D-MRVCofKBWPOntR3DQ4s")#old csv
+data <-read.csv("combined_output.csv")
+
+#  system("gdown --id 1uN-IcoS_PDXataHSJHiYi7fsFqo0l0VQ")
+#  data <-read.csv("mathanxietycombined2025v1.csv")
+```
+:::
+
+::: {.cell .code id="dgvSPbsm-W6E"}
+``` python
+#data <-read.csv("combined_output.csv")
+summary(data$w1mathaxcheck)
+data <- data %>% select(-w1mathaxcheck)
+#head(data)
+```
+:::
+
+::: {.cell .code id="BcbAJ24P-9N6"}
+``` python
+summary(data)
+df= data
+dfr= data
+```
+:::
+
+::: {.cell .code collapsed="true" id="zz9pThUNFAry"}
+``` python
+df <- dfr |>
+  filter(w1status == "Completed")
+table(df$w1status)
+```
+:::
+
+::: {.cell .code collapsed="true" id="yWZhjzpRE_m_"}
+``` python
+df |>
+  ggplot(aes(x=w1timetaken/60))+
+  geom_histogram(bins= 130) +
+  theme_minimal()
+```
+:::
+
+::: {.cell .code collapsed="true" id="SxFf9cUqE_pH"}
+``` python
+# Step 1: Define the Likert-scale variables
+likert_vars <- c(
+  "w1mathse1", "w1mathse2", "w1mathse3", "w1mathse4", "w1mathse5",
+  "w1mathse6", "w1mathse7", "w1mathse8", "w1mathse9", "w1mathse10",
+  "w1mathse11", "w1mathse12", "w1mathse13", "w1mathse14", "w1mathse15",
+  "w1mathax1", "w1mathax2", "w1mathax3", "w1mathax4", "w1mathax5",
+  "w1mathax6", "w1mathax7", "w1mathax8", "w1mathax9"#, "w1mathaxcheck"
+)
+setdiff(likert_vars, colnames(df))  # This will show any missing columns
+likert_data <- df[, likert_vars]
+
+# Step 3: Summary statistics
+summary_stats <- likert_data %>%
+  summarise(across(everything(), list(mean = ~mean(., na.rm = TRUE), sd = ~sd(., na.rm = TRUE))))
+
+print(summary_stats)
+# Step 4: Cronbach's Alpha
+alpha_result <- psych::alpha(likert_data)
+print(alpha_result)
+```
+:::
+
+::: {.cell .code collapsed="true" id="ZV8EWLCuE_rF"}
+``` python
+library(likert)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Ensure likert_vars contains valid column names
+likert_vars <- c(
+  "w1mathse1", "w1mathse2", "w1mathse3", "w1mathse4", "w1mathse5",
+  "w1mathse6", "w1mathse7", "w1mathse8", "w1mathse9", "w1mathse10",
+  "w1mathse11", "w1mathse12", "w1mathse13", "w1mathse14", "w1mathse15",
+  "w1mathax1", "w1mathax2", "w1mathax3", "w1mathax4", "w1mathax5",
+  "w1mathax6", "w1mathax7", "w1mathax8", "w1mathax9" #, "w1mathaxcheck"
+)
+
+likert_vars <- intersect(likert_vars, colnames(df))
+
+# Clean df in place: remove any row that has NA in any of the likert_vars
+df <- df %>%
+  filter(if_all(all_of(likert_vars), ~ !is.na(.)))
+
+# Now recreate df_likert_5 from cleaned df
+df_likert_5 <- df %>%
+  select(all_of(likert_vars)) %>%
+  mutate(across(everything(), ~ factor(as.character(.), levels = as.character(1:5), ordered = TRUE)))
+
+
+# Calculate mean response values
+sum_5 <- df_likert_5 %>%
+  summarise(across(everything(), ~ mean(as.numeric(.), na.rm = TRUE))) %>%
+  pivot_longer(cols = everything(), names_to = "Question", values_to = "MeanResponse")
+
+# Prepare melted dataframe for visualization
+df_melted_5 <- df_likert_5 %>%
+  pivot_longer(cols = everything(), names_to = "Question", values_to = "Response")
+
+
+# Create a boxplot visualization
+ggplot(df_melted_5, aes(x = Question, y = as.numeric(Response), fill = Question)) +
+  geom_boxplot() +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Box Plot of 5-Point Likert Scale Responses", x = "Survey Questions", y = "Response") +
+  theme(legend.position = "none")
+```
+:::
+
+::: {.cell .code id="c1MHt7L1E_to"}
+``` python
+
+summary(df_melted_5)
+```
+:::
+
+::: {.cell .code collapsed="true" id="yBramu3UE_vp"}
+``` python
+
+df_likert_5 <- as.data.frame(df_likert_5)
+likert_data_5 <- likert(df_likert_5)
+
+plot(likert_data_5, centered = TRUE, wrap = 50) +
+  ggtitle("5-Point Likert Scale Responses Distribution") +
+  theme(
+    plot.title = element_text(size = 10), # Reducing title text size
+    axis.text = element_text(size = 8),   # Reducing axis text size
+    legend.text = element_text(size = 8)  # Reducing legend text size
+  )
+```
+:::
+
+::: {.cell .code collapsed="true" id="kQWMVDTaE_xY"}
+``` python
+
+#find the mean
+sum_5 <- df_likert_5 %>%
+  summarise(across(everything(), ~ mean(as.numeric(.), na.rm = TRUE))) %>%
+  pivot_longer(cols = everything(), names_to = "Question", values_to = "MeanResponse")
+#the top 5 and bottom 5 questions
+top_5 <- sum_5 %>% arrange(desc(MeanResponse)) %>% head(5)
+bottom_5 <- sum_5 %>% arrange(MeanResponse) %>% head(5)
+print("Top 5 Questions by Mean Response:")
+print(top_5)
+print("Bottom 5 Questions by Mean Response:")
+print(bottom_5)
+```
+:::
+
+::: {.cell .code collapsed="true" id="8aAfagZtE_1l"}
+``` python
+
+# Create the indicator variable for taking any upper-division math/stats
+df$took_upper_div_math_stats <- apply(df[, c(
+  paste0("w1colmath", 13:31),
+  paste0("w1colstats", 6:9)
+)], 1, function(x) any(x == 1, na.rm = TRUE))
+vars_of_interest <- c("w1mathse14", "w1mathax3", "w1mathax7", "w1mathax8", "w1mathax4", "w1mathax2")
+
+# Convert logical to numeric
+df$took_upper_div_math_stats <- as.numeric(df$took_upper_div_math_stats)
+
+# Correlation matrix
+cor_matrix <- cor(df[, c(vars_of_interest, "took_upper_div_math_stats")], use = "complete.obs")
+print(round(cor_matrix, 2))
+```
+:::
+
+::: {.cell .code collapsed="true" id="YkS6h_IWE_zX"}
+``` python
+
+# Boxplots for each variable
+boxplot(df$w1mathse14, df$w1mathax3, df$w1mathax7,
+        df$w1mathax8, df$w1mathax4, df$w1mathax2,
+        names = c("se14", "ax3", "ax7", "ax8", "ax4", "ax2"),
+        main = "Boxplot of Math Variables", col = rainbow(6, alpha=0.2))
+```
+:::
+
+::: {.cell .code collapsed="true" id="nGLGbWl-lU37"}
+``` python
+summary(df$took_upper_div_math_stats)
+```
+:::
+
+::: {.cell .code collapsed="true" id="z4Ugjm_7E_3c"}
+``` python
+
+install.packages("corrplot")
+library(corrplot)
+corrplot(cor_matrix, method = "circle", type = "upper", tl.col = "black", tl.srt = 45)
+```
+:::
+
+::: {.cell .code collapsed="true" id="BIgcRiA5E_5R"}
+``` python
+math_vars1 <- c("w1mathse1", "w1mathse2", "w1mathse3", "w1mathse4", "w1mathse5", "w1mathse6")
+math_vars2 <- c("w1mathse7", "w1mathse8", "w1mathse9", "w1mathse10", "w1mathse11", "w1mathse12")
+math_vars3 <- c("w1mathse13", "w1mathse14", "w1mathse15", "w1mathax1", "w1mathax2", "w1mathax3")
+math_vars4 <- c("w1mathax4", "w1mathax5", "w1mathax6", "w1mathax7", "w1mathax8", "w1mathax9")
+all_math_groups <- list(math_vars1, math_vars2, math_vars3, math_vars4)
+for (group in all_math_groups) {
+  par(mfrow = c(2, 3))
+  for (var in group) {
+    boxplot(df[[var]] ~ df$took_upper_div_math_stats,
+            main = paste("Boxplot:", var),
+            col = c("salmon", "lightblue"),
+            ylab = var)}}
+```
+:::
+
+::: {.cell .markdown id="aT2vi9bz6kMi"}
+###Good at math boxplot
+:::
+
+::: {.cell .code collapsed="true" id="cDkApgh9E_7j"}
+``` python
+#summary(df$took_upper_div_math_stats)
+png("math_plot_goodatmath.png", width = 1000, height = 500, bg = "transparent")
+
+par(mfrow = c(1, 2))
+boxplot(df$w1mathse5 ~ df$took_upper_div_math_stats,
+        main = "'I believe I am the kind of person who
+is good at math.'",
+        names = c("No Upper-Div", "Took Upper-Div"),
+        col = c("#fc6c85", "#90b270"),
+        ylab = "Anxiety (Likert Scale)",
+        xlab = "Upper-Div Math Status",
+        cex.main = 1.7,
+        cex.lab = 1.6,
+        cex.axis = 1.4)
+dev.off()
+```
+:::
+
+::: {.cell .markdown id="L4cYjrLF6nO8"}
+###math box plot took upper div
+:::
+
+::: {.cell .code id="LvGvuq0uE_9S"}
+``` python
+png("math_plots.png", width = 1000, height = 500, bg = "transparent")
+
+par(mfrow = c(1, 2))
+boxplot(df$w1mathse10 ~ df$took_upper_div_math_stats,
+        main = "Confidence Taking a Math Test",
+        names = c("No Upper-Div", "Took Upper-Div"),
+        col = c("#fc6c85", "#90b270"),
+        ylab = "Math Self-Efficacy",
+        xlab = "Upper-Div Math Status",
+         cex.main = 1.7,
+         cex.axis = 1.4,
+         cex.lab = 1.6
+         )
+boxplot(df$w1mathax8 ~ df$took_upper_div_math_stats,
+        main = "Stress for a Surprise Math Test",
+        names = c("No Upper-Div", "Took Upper-Div"),
+        col = c("#fc6c85", "#90b270"),
+        ylab = "Finding Out About A Pop Quiz",
+         xlab = "Upper-Div Math Status",
+         cex.main = 1.7,
+         cex.axis = 1.4,
+         cex.lab = 1.6)
+
+dev.off()
+```
+:::
+
+::: {.cell .markdown id="bHutp8U9-TvT"}
+## BOXPLOT POP QUIZ ANXIETY
+:::
+
+::: {.cell .code id="2BFhkfJCE__I"}
+``` python
+boxplot(df$w1mathax8 ~ df$took_upper_div_math_stats,
+        main = "Finding Out About A Math Pop Quiz",
+        names = c("No Upper-Div", "Took Upper-Div"),
+        col = c("#fc6c85", "#90b270"),
+        ylab = "Anxiety (Likert Scale)",
+        xlab = "Upper-Div Math Status",
+        cex.main = 1.7,
+        cex.axis = 1.4,
+        cex.lab = 1.6
+        )
+```
+:::
+
+::: {.cell .code id="82wDevlCPF1T"}
+``` python
+png("math_boxplots_upperdiv.png", width = 1000, height = 500, bg = "transparent")
+
+par(mfrow = c(1, 2))  # 1 row, 2 columns for boxplots
+
+# Boxplot 1: "I believe I am the kind of person who is good at math"
+boxplot(df$w1mathse5 ~ df$took_upper_div_math_stats,
+        main = "'I believe I am the kind\nof person who is good at math.'",
+        names = c("No Upper-Div", "Took Upper-Div"),
+        col = c("#fc6c85", "#90b270"),
+        ylab = "Likert Scale Rating",
+        xlab = "Upper-Div Math Status",
+        cex.main = 1.5,
+        cex.lab = 1.3,
+        cex.axis = 1.2)
+# Boxplot 2: "I am confident in my math ability"
+boxplot(df$w1mathse4 ~ df$took_upper_div_math_stats,
+        main = "'I am confident in my\nmath ability.'",
+        names = c("No Upper-Div", "Took Upper-Div"),
+        col = c("#fc6c85", "#90b270"),
+        ylab = "Likert Scale Rating",
+        xlab = "Upper-Div Math Status",
+        cex.main = 1.5,
+        cex.lab = 1.3,
+        cex.axis = 1.2)
+
+dev.off()
+```
+:::
+
+::: {.cell .code id="OpCppuQeUh1h"}
+``` python
+```
+:::
+
+::: {.cell .markdown id="FU2Nhrp3OlwV"}
+:::
+
+::: {.cell .code collapsed="true" id="sv4CDTujFABX"}
+``` python
+
+boxplot(df$w1mathse10 ~ df$took_upper_div_math_stats,
+        main = "I feel confident when taking a math test.",
+        names = c("No Upper-Div", "Took Upper-Div"),
+        col = c("lightblue", "salmon"),
+        ylab = "w1mathse5")
+```
+:::
+
+::: {.cell .code id="_Qt7sY4YFADD"}
+``` python
+# Filter for upper-division math/stats takers (1)
+df_likert_upper <- df %>%
+  filter(took_upper_div_math_stats == 1) %>%
+  select(all_of(likert_vars)) %>%
+  mutate(across(everything(), ~ factor(as.character(.),levels = as.character(1:5),labels = c("Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"),ordered = TRUE)))
+df_likert_upper <- as.data.frame(df_likert_upper)
+# Create Likert object
+likert_data_upper <- likert(df_likert_upper)
+# Plot it
+plot(likert_data_upper, centered = TRUE, wrap = 50) +
+  ggtitle("5-Point Likert Scale Responses (Took Upper-Div Math)") +
+  theme(plot.title = element_text(size = 10),axis.text = element_text(size = 8),legend.text = element_text(size = 8)
+  )
+```
+:::
+
+::: {.cell .code id="ujRbuXlHFAFA"}
+``` python
+# Create the indicator for taking any lower-division math/stats
+df$took_lower_div_math_stats <- apply(df[, c(
+  paste0("w1colmath", 1:12),
+  paste0("w1colstats", 1:5)
+)], 1, function(x) any(x == 1, na.rm = TRUE))
+
+# Convert logical to numeric (1 = took lower-div, 0 = didn't)
+df$took_lower_div_math_stats <- as.numeric(df$took_lower_div_math_stats)
+```
+:::
+
+::: {.cell .code id="vWvrMIqjFAG5"}
+``` python
+
+# Filter for lower-division math/stats takers (1)
+df_likert_lower <- df %>%
+  filter(took_lower_div_math_stats == 1) %>%
+  select(all_of(likert_vars)) %>%
+  mutate(across(everything(), ~ factor(as.character(.),
+                                       levels = as.character(1:5),
+                                       labels = c("Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"),
+                                       ordered = TRUE)))
+
+# Create Likert object
+likert_data_lower <- likert(df_likert_lower)
+
+# Plot it
+plot(likert_data_lower, centered = TRUE, wrap = 50) +
+  ggtitle("5-Point Likert Scale Responses (Took Lower-Div Math)") +
+  theme(
+    plot.title = element_text(size = 10),
+    axis.text = element_text(size = 8),
+    legend.text = element_text(size = 8)
+  )
+```
+:::
+
+::: {.cell .code id="wfs7ZIM3FAI6"}
+``` python
+unique(df$took_upper_div_math_stats)
+```
+:::
+
+::: {.cell .code id="qquGu9tPF-L6"}
+``` python
+# Select relevant anxiety-related items
+anxiety_items <- c(  "w1mathax1", "w1mathax2", "w1mathax3", "w1mathax4", "w1mathax5",  "w1mathax6", "w1mathax7", "w1mathax8", "w1mathax9",   "w1mw1", "w1mw2", "w1mw3", "w1mw4", "w1mw5")
+
+df$math_anxiety_score <- rowMeans(df[, anxiety_items], na.rm = TRUE)
+df$math_anxiety_score <- rowMeans(
+  cbind(
+    6 - df[, paste0("w1mathse", 1:15)],  # reverse-coded self-efficacy
+    df[, paste0("w1mathax", 1:9)],
+    #df[["w1mathaxcheck"]],
+    df[, paste0("w1mw", 1:5)]
+  ),
+  na.rm = TRUE
+)
+```
+:::
+
+::: {.cell .markdown id="LJh4Wg2G2a2j"}
+##Math Anxiety Score 1 histogram WEEK 1 DATA
+:::
+
+::: {.cell .code id="KJ5ufQFWF-Y-"}
+``` python
+png("math_histogram_math_anxiety_score1.png", width = 1000, height = 500, bg = "transparent")
+
+par(mfrow = c(1, 1))
+# Round scores to nearest integer 1-5 to bin them
+df$anxiety_bin <- round(df$math_anxiety_score)
+df$anxiety_bin <- pmin(pmax(df$anxiety_bin, 1), 5)
+hist(df$anxiety_bin,
+     breaks = seq(0.5, 5.5, by = 1),  # bins centered on 1-5
+     main = "Math Anxiety Score (Trait)",
+     xlab = "Math Anxiety Score",
+     col = "#fc6c85",
+     border = "white",
+     xaxt = "n",
+     cex.main = 3, cex.lab = 1.5, cex.axis = 1.7
+     )
+axis(1, at = 1:5)
+dev.off()
+```
+:::
+
+::: {.cell .code collapsed="true" id="MO9z2FaKGBrb"}
+``` python
+png("math_histogram_notbinned.png", width = 1000, height = 500, bg = "transparent")
+par(mfrow = c(1, 1))
+df$math_anxiety_score <- rowMeans(
+  cbind(
+    6 - df[, paste0("w1mathse", 1:15)],
+    df[, paste0("w1mathax", 1:9)],
+ #   df[["w1mathaxcheck"]],
+    df[, paste0("w1mw", 1:5)]),
+  na.rm = TRUE)
+hist(df$math_anxiety_score,
+     main = "Distribution of Math Anxiety Scores",
+     xlab = "Math Anxiety Score",
+     col = "#90b270",
+     border = "white",
+     breaks = 20, cex.main = 4, cex.lab = 5)
+dev.off()
+```
+:::
+
+::: {.cell .markdown id="H-g-EzrZIXUm"}
+##Part 2 - Math Anxiety 2 WEEK 3 DATA
+:::
+
+::: {.cell .code collapsed="true" id="vlNxdsJ8FALk"}
+``` python
+# List of columns to check for NA
+#df <-read.csv("combined_output.csv")
+
+stress_vars <- c(
+  "w3stress", "w3stressmathp", "w3stressamount", "w3stressunder",
+  "w3stressscore"
+)
+
+# Filter out rows with any NA in these columns
+df <- df %>%
+ filter(if_all(all_of(stress_vars), ~ !is.na(.)))
+
+#summary(df)
+# Create summed stress score
+df$stress_score_total <- rowSums(df[, stress_vars], na.rm = TRUE)
+
+# Rescale summed stress score to 1–5 range
+min_score <- min(df$stress_score_total, na.rm = TRUE)
+max_score <- max(df$stress_score_total, na.rm = TRUE)
+
+df$stress_scaled <- 1 + 4 * (df$stress_score_total - min_score) / (max_score - min_score)
+
+# Bin the scaled score
+df$stress_bin <- round(df$stress_scaled)
+df$stress_bin <- pmin(pmax(df$stress_bin, 1), 5)
+
+# Plot again
+png("MA2_stress_histogram_scaled.png", width = 1000, height = 500, bg = "transparent")
+par(mfrow = c(1, 1))
+hist(df$stress_bin,
+     breaks = seq(0.5, 5.5, by = 1),
+     main = "Math Anxiety Score (State)",
+     xlab = "Binned Stress Score (Scaled)",
+     col = "#fc6c85", #fc6c85
+     ylim = c(0, 50),  # <-- set y-axis limits here
+     border = "white",
+     xaxt = "n",
+     cex.main = 3,
+     cex.lab = 1.5,
+     cex.axis = 1.7)
+axis(1, at = 1:5)
+dev.off()
+summary(df$stress_score_total)
+summary(df$math_anxiety_score)
+```
+:::
+
+::: {.cell .code id="VfB4kCbqmqp_"}
+``` python
+# Load dplyr package
+library(dplyr)
+
+# Combine multiple columns into one (as a string)
+df <- df %>%
+  mutate(new_column = paste(w3stress, w3stressmathp, w3stressamount, w3stressunder, w3stressscore, sep = "_"))
+```
+:::
+
+::: {.cell .code collapsed="true" id="Vt82JZE8kkKG"}
+``` python
+# install.packages("ggplot2")
+# library(ggplot2)
+
+# # Create a histogram for the 'w3stress, w3stressmathp, w3stressamount, w3stressunder, w3stressscore' variable
+# ggplot(df, aes(x = stress_vars <- c("w3stress", "w3stressmathp", "w3stressamount", "w3stressunder", "w3stressscore")
+# )) +
+#   geom_histogram(binwidth = 1, fill = "#fc6c85", alpha = 0.7) +
+#   labs(title = "Distribution of Math Anxiety Scores", x = "Math Anxiety Score", y = "Number of Students") +
+#   theme_minimal()
+# plot.background = element_rect(fill = "transparent", color = NA)
+# panel.grid.major = element_blank()
+#     panel.grid.minor = element_blank()
+# ggsave("math_anxiety_histogram.png", bg = "transparent")
+```
+:::
+
+::: {.cell .markdown id="Qi8R08Z0Ay4c"}
+# WEEK 3 STATE ANXIETY
+:::
+
+::: {.cell .markdown id="NSRgQ_zHVxS7"}
+### t test
+:::
+
+::: {.cell .code id="g9GSbq6WAjWt"}
+``` python
+#t test try
+df$stress_group <- ifelse(df$stress_bin <= 3, "Low", "High")
+df_anx <- df[!is.na(df$math_anxiety_score) & !is.na(df$stress_group), ]
+t1 <- t.test(math_anxiety_score ~ stress_group, data = df_anx)
+print("T-test: Math Anxiety by Stress Level (Low vs High)")
+print(t1)
+# NULL: No difference ....
+# ALTERNATIVE: There is a difference
+```
+:::
+
+::: {.cell .code id="BNvs8a2CV0OV"}
+``` python
+# #t test try
+# #state dv, trait iv.
+# df$anxiety_bin <- ifelse(df$anxiety_bin <= 3, "Low", "High")
+# df_anx <- df[!is.na(df$anxiety_bin) & !is.na(df$stress_group), ]
+# t1 <- t.test(stress_group ~ anxiety_bin, data = df_anx)
+# print("T-test: Math Anxiety by Stress Level (Low vs High)")
+# print(t1)
+```
+:::
+
+::: {.cell .markdown id="5xdYplst7Vd-"}
+#math anxiety score 1 (trait) vs math anxiety score 2
+:::
+
+::: {.cell .code id="II9JD1Dl7ZKa"}
+``` python
+df$math_anxiety_score <- as.numeric(as.character(df$math_anxiety_score))
+
+# Step 1: Bin stress and anxiety scores (as before)
+df$stress_bin <- round(1 + 4 * (df$stress_score_total - min(df$stress_score_total)) /
+                         (max(df$stress_score_total) - min(df$stress_score_total)))
+df$stress_bin <- pmin(pmax(df$stress_bin, 1), 5)
+
+df$anxiety_bin <- round(df$math_anxiety_score)
+df$anxiety_bin <- pmin(pmax(df$anxiety_bin, 1), 5)
+
+# Step 2: Count occurrences of each (stress_bin, anxiety_bin) pair
+heat_df <- df %>%
+  count(stress_bin, anxiety_bin) %>%
+  complete(stress_bin = 1:5, anxiety_bin = 1:5, fill = list(n = 0))
+#summary(heat_df)
+# Step 3: Plot using ggplot2
+png("stress_vs_anxiety_tileplot.png", width = 1000, height = 500, bg = "transparent")
+ggplot(heat_df, aes(x = factor(stress_bin), y = factor(anxiety_bin), fill = n)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "#fc6c85", high = "#590d22") +
+  labs(
+    x = "Binned Stress Score (1–5)",
+    y = "Math Anxiety Score (1–5)",
+    title = "Heatmap of Stress vs. Math Anxiety Scores",
+    fill = "Count"
+  ) +
+  theme_minimal()
+dev.off()
+```
+:::
+
+::: {.cell .code id="W112YBsvCel_"}
+``` python
+#summary(stress_score_total)
+```
+:::
+
+::: {.cell .markdown id="70ncm73pBSSq"}
+## scatterplot of the ma1 vs ma2 score
+:::
+
+::: {.cell .code id="iSuqpyYF7b3i"}
+``` python
+# math_anxiety_score
+df$stress_score_total <- rowSums(df[, stress_vars], na.rm = TRUE)
+min_score <- min(df$stress_score_total, na.rm = TRUE)
+max_score <- max(df$stress_score_total, na.rm = TRUE)
+df$stress_scaled <- 1 + 4 * (df$stress_score_total - min_score) / (max_score - min_score)
+
+png("scatter_stress_vs_anxiety_ggplot.png", width = 1000, height = 500, bg = "transparent")
+# col = c("#e75480", "#90b270"),
+ggplot(df, aes(x = math_anxiety_score, y = stress_scaled)) +
+  geom_point(color = "#e75480", size = 3) +  # dark red dots, bigger
+  geom_smooth(method = "lm", se = TRUE, color = "darkgreen", fill = "#90b270", size = 1.5) +
+  labs(
+    title = "Math Anxiety (Trait) vs. Math Anxiety (State)",
+    x = "Math Anxiety Score (Trait)",
+    y = "Math Anxiety Score (State)"
+  ) +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 25, face = "bold"),
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20),
+  axis.text = element_text(size = 15)
+  )
+
+dev.off()
+
+
+# # Filter complete cases for math_anxiety_score
+# df_math <- df[!is.na(df$math_anxiety_score) & !is.na(df$took_upper_div_math_stats), ]
+# t_math <- t.test(math_anxiety_score ~ took_upper_div_math_stats, data = df_math)
+# print("T-test: Math Anxiety ~ Took Upper-Division Math")
+# print(t_math)
+
+# # Filter complete cases for stress_score_total
+# df_stress <- df[!is.na(df$stress_score_total) & !is.na(df$took_upper_div_math_stats), ]
+# t_stress <- t.test(stress_score_total ~ took_upper_div_math_stats, data = df_stress)
+# print("T-test: Stress Score ~ Took Upper-Division Math")
+# print(t_stress)
+```
+:::
+
+::: {.cell .code id="3FGah4PjeO4e"}
+``` python
+# library(ggplot2)
+
+# # Make sure bins are clipped to 1–5 range
+# df$anxiety_bin <- pmin(pmax(df$anxiety_bin, 1), 5)
+# df$stress_scaled_bin <- pmin(pmax(df$stress_scaled_bin, 1), 5)
+
+# # Save scatterplot as PNG
+# png("scatter_trait_vs_state_anxiety.png", width = 1000, height = 500, bg = "transparent")
+
+# ggplot(df, aes(x = anxiety_bin, y = stress_scaled_bin)) +
+#   geom_jitter(width = 0.2, height = 0.2, color = "#e75480", size = 2.5) +
+#   geom_smooth(method = "lm", se = TRUE, color = "darkgreen", fill = "#90b270", size = 1.3) +
+#   labs(
+#     title = "Trait vs. State Math Anxiety (Binned Scores)",
+#     x = "Trait Math Anxiety (1–5)",
+#     y = "State Math Anxiety (1–5)"
+#   ) +
+#   scale_x_continuous(breaks = 1:5) +
+#   scale_y_continuous(breaks = 1:5) +
+#   theme_minimal() +
+#   theme(
+#     plot.title = element_text(size = 20, face = "bold"),
+#     axis.title.x = element_text(size = 16),
+#     axis.title.y = element_text(size = 16),
+#     axis.text = element_text(size = 13)
+#   )
+
+# dev.off()
+```
+:::
+
+::: {.cell .markdown id="edMYkdu-K7wP"}
+##Code for Descriptive Statistics
+
+###Math Anxiety Trait Statistics
+:::
+
+::: {.cell .code id="wUd6sdsnJeQ5"}
+``` python
+math_anxiety_vars <- c(
+  "w1mathax1", "w1mathax2", "w1mathax3", "w1mathax4", "w1mathax5",
+  "w1mathax6", "w1mathax7", "w1mathax8", "w1mathax9"
+)
+# Ensure they are numeric
+df[math_anxiety_vars] <- lapply(df[math_anxiety_vars], function(x) as.numeric(as.character(x)))
+df <- df %>%
+  filter(if_all(all_of(math_anxiety_vars), ~ !is.na(.)))
+# Create the raw trait math anxiety score (sum of 9 Likert items)
+df$math_anxiety_score <- rowSums(df[, math_anxiety_vars], na.rm = TRUE)
+
+# Rescale math_anxiety_score to 1-5 range
+min_anx <- min(df$math_anxiety_score, na.rm = TRUE)
+max_anx <- max(df$math_anxiety_score, na.rm = TRUE)
+df$math_anxiety_scaled <- 1 + 4 * (df$math_anxiety_score - min_anx) / (max_anx - min_anx)
+
+print("MA trait Summary without 1-5 binning:")
+summary(df$math_anxiety_score)
+
+# Create binned anxiety variable (1-5)
+df$anxiety_bin <- round(df$math_anxiety_scaled)
+df$anxiety_bin <- pmin(pmax(df$anxiety_bin, 1), 5)  # Clamp to 1–5
+print("Summary with 1-5 binning:")
+summary(df$anxiety_bin)
+
+# Calculate mean, sd and ±1 SD
+mean_stress <- mean(df$math_anxiety_scaled, na.rm = TRUE)
+sd_stress <- sd(df$stress_scanxiety_binaled, na.rm = TRUE)
+
+cat("Stress Scaled Mean:", mean_stress, "\n")
+cat("Stress Scaled SD:", sd_stress, "\n")
+cat("1 SD below mean:", mean_stress - sd_stress, "\n")
+cat("1 SD above mean:", mean_stress + sd_stress, "\n")
+
+# Bin scaled stress score to 1-5
+df$anxiety_bin <- round(df$stress_scaled)
+df$anxiety_bin <- pmin(pmax(df$anxiety_bin, 1), 5)  # Clamp to 1–5
+```
+:::
+
+::: {.cell .markdown id="epdoaDtOLqyy"}
+###Math anxiety state descriptive statistics
+:::
+
+::: {.cell .code id="B8C8GBejLZp5"}
+``` python
+stress_vars <- c("w3stress", "w3stressmathp", "w3stressamount", "w3stressunder", "w3stressscore")
+
+# Remove rows with missing data
+df <- df %>%
+  filter(if_all(all_of(stress_vars), ~ !is.na(.)))
+
+# Create scaled stress score
+df$stress_score_total <- rowSums(df[, stress_vars], na.rm = TRUE)
+min_score <- min(df$stress_score_total, na.rm = TRUE)
+max_score <- max(df$stress_score_total, na.rm = TRUE)
+df$stress_scaled <- 1 + 4 * (df$stress_score_total - min_score) / (max_score - min_score)
+
+print("MA State without the 1-5 binning")
+summary(df$stress_score_total)
+summary(df$stress_scaled)
+
+# Calculate mean, sd and ±1 SD
+mean_stress <- mean(df$stress_scaled, na.rm = TRUE)
+sd_stress <- sd(df$stress_scaled, na.rm = TRUE)
+
+cat("Stress Scaled Mean:", mean_stress, "\n")
+cat("Stress Scaled SD:", sd_stress, "\n")
+cat("1 SD below mean:", mean_stress - sd_stress, "\n")
+cat("1 SD above mean:", mean_stress + sd_stress, "\n")
+
+# Bin scaled stress score to 1-5
+df$stress_scaled_bin <- round(df$stress_scaled)
+df$stress_scaled_bin <- pmin(pmax(df$stress_scaled_bin, 1), 5)  # Clamp to 1–5
+
+```
+:::
+
+::: {.cell .code id="0t7GGcQyMlgI"}
+``` python
+library(ggplot2)
+library(gridExtra)  # for arranging plots side by side
+
+# Histogram of raw math anxiety scores
+hist_raw <- ggplot(df, aes(x = math_anxiety_score)) +
+  geom_histogram(binwidth = 1, fill = "#69b3a2", color = "black") +
+  labs(title = " Raw Math Anxiety Trait Score (9–45)", x = "Raw Score", y = "Count") +
+  theme_minimal()
+
+# Histogram of binned math anxiety (1–5)
+hist_bin <- ggplot(df, aes(x = anxiety_bin)) +
+  geom_histogram(binwidth = 1, fill = "#404080", color = "white") +
+  scale_x_continuous(breaks = 1:5) +
+  labs(title = "Binned Math Anxiety Trait (1–5)", x = "Binned Score", y = "Count") +
+  theme_minimal()
+# Histogram of raw math anxiety scores
+hist_raw1 <- ggplot(df, aes(x = stress_score_total)) +
+  geom_histogram(binwidth = 1, fill = "#69b3a2", color = "black") +
+  labs(title = " Raw Math Anxiety State Score (9–45)", x = "Raw Score", y = "Count") +
+  theme_minimal()
+
+# Histogram of binned math anxiety (1–5)
+hist_bin1 <- ggplot(df, aes(x = stress_scaled)) +
+  geom_histogram(binwidth = 1, fill = "#404080", color = "white") +
+  scale_x_continuous(breaks = 1:5) +
+  labs(title = "Binned Math Anxiety State (1–5)", x = "Binned Score", y = "Count") +
+  theme_minimal()
+
+# Arrange histograms side by side
+grid.arrange(hist_raw, hist_bin, ncol = 2)
+print("hi")
+grid.arrange(hist_raw1, hist_bin1, ncol = 2)
+```
+:::
+
+::: {.cell .markdown id="rFwZnuBGjkVR"}
+###ma1 vsma2 separated by prior coursework
+:::
+
+::: {.cell .code id="pae83NK0jiX0"}
+``` python
+df$took_upper_div_math_stats <- apply(df[, c(
+  paste0("w1colmath", 9:31),
+  paste0("w1colstats", 6:9)
+)], 1, function(x) !any(x == 1, na.rm = TRUE))
+df_clean <- df
+table(df$took_upper_div_math_stats, useNA = "ifany")
+
+group_levels <- sort(unique(df_clean$took_upper_div_math_stats))
+
+# Dynamically assign labels and colors
+group_labels <- ifelse(group_levels == 0, "Took Adv Math Courses", "No Upper-Div")
+group_colors <- ifelse(group_levels == 0, "#90b270", "#fc6c85")
+
+
+# Recalculate stress_scaled if needed
+df$stress_score_total <- rowSums(df[, stress_vars], na.rm = TRUE)
+min_score <- min(df$stress_score_total, na.rm = TRUE)
+max_score <- max(df$stress_score_total, na.rm = TRUE)
+df$stress_scaled <- 1 + 4 * (df$stress_score_total - min_score) / (max_score - min_score)
+
+# Filter to rows with complete data
+df_plot <- df %>%
+  filter(!is.na(math_anxiety_score), !is.na(stress_scaled), !is.na(took_upper_div_math_stats))
+
+# Plot: all in pink, upper-div in green
+png("scatter_stress_vs_anxiety_highlighted.png", width = 1000, height = 500, bg = "transparent")
+
+ggplot(df_plot, aes(x = math_anxiety_score, y = stress_scaled)) +
+  geom_point(data = df_plot[df_plot$took_upper_div_math_stats == 1, ],
+             color = "#e75480", size = 3) +  # No Upper-Div = red
+  geom_point(data = df_plot[df_plot$took_upper_div_math_stats == 0, ],
+             color = "#0000FF", size = 6, shape = 17) +  # Took Upper-Div = green triangles
+  geom_smooth(method = "lm", se = TRUE, color = "darkgreen", fill = "#90b270", size = 1.5) +
+  labs(
+    title = "Math Anxiety (Trait) vs. Math Anxiety (State)",
+    x = "Math Anxiety Score (Trait)",
+    y = "Math Anxiety Score (State)"
+  ) +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 18, face = "bold"),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+  axis.text = element_text(size = 14)
+  )
+
+dev.off()
+```
+:::
+
+::: {.cell .markdown id="5D_Q46xVJ0rv"}
+### scatterplot with legend
+:::
+
+::: {.cell .code id="X7QP5sMxHd4D"}
+``` python
+table(df$took_upper_div_math_stats, useNA = "ifany")
+
+# How many of the 0s (Took upper-div) have complete data?
+df %>%
+  filter(took_upper_div_math_stats == 0) %>%
+  summarise(
+    complete = sum(!is.na(math_anxiety_score) & !is.na(stress_scaled)),
+    total = n()
+  )
+df$group_label <- ifelse(df$took_upper_div_math_stats == 0,
+                         "Took Advanced Courses",
+                         "No Upper-Div")
+
+# Filter to rows with complete data
+df_plot <- df %>%
+  filter(!is.na(math_anxiety_score), !is.na(stress_scaled), !is.na(took_upper_div_math_stats))
+
+png("scatter_stress_vs_anxiety_with_legend_left.png", width = 1000, height = 500, bg = "transparent")
+ggplot(df_plot, aes(x = math_anxiety_score, y = stress_scaled, color = group_label, shape = group_label)) +
+  geom_point(size = 4) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkgreen", fill = "#90b270", size = 1.5, inherit.aes = FALSE,
+              aes(x = math_anxiety_score, y = stress_scaled)) +
+  scale_color_manual(values = c("Took Advanced Courses" = "#3d8ee5", "No Upper-Div" = "#e75480")) +
+  scale_shape_manual(values = c("Took Advanced Courses" = 17, "No Upper-Div" = 16)) +
+  labs(
+    title = "Math Anxiety (Trait) vs. Math Anxiety (State)",
+    x = "Math Anxiety Score (Trait)",
+    y = "Math Anxiety Score (State)",
+    color = "Group",
+    shape = "Group"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(size = 17),
+    axis.title.y = element_text(size = 17),
+    axis.text = element_text(size = 14),
+    plot.title = element_text(size = 25, face = "bold"),
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 17),
+    legend.position = c(0.05, 0.95),  # position inside the plot (x=right, y=top)
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.margin = margin(6, 6, 6, 6)
+  )
+
+dev.off()
+```
+:::
+
+::: {.cell .code id="q5NbtZWzXPDR"}
+``` python
+# table(df$took_upper_div_math_stats, useNA = "ifany")
+
+# # How many of the 0s (Took upper-div) have complete data?
+# df %>%
+#   filter(took_upper_div_math_stats == 0) %>%
+#   summarise(
+#     complete = sum(!is.na(math_anxiety_score) & !is.na(stress_scaled)),
+#     total = n()
+#   )
+# df$group_label <- ifelse(df$took_upper_div_math_stats == 0,
+#                          "Took Advanced Courses",
+#                          "No Upper-Div")
+
+# df_plot <- df %>% # Filter to rows with complete data
+#   filter(!is.na(math_anxiety_score), !is.na(stress_scaled), !is.na(took_upper_div_math_stats))
+
+# png("scatter_stress_vs_anxiety_with_legend_left_test.png", width = 1000, height = 500, bg = "transparent")
+# ggplot(df_plot, aes(x = math_anxiety_score, y = stress_scaled, color = group_label, shape = group_label)) +
+#   geom_point(size = 4) +
+#   geom_smooth(method = "auto", se = False, color = "darkgreen", fill = "#90b270", size = 1.5, inherit.aes = FALSE,
+#               aes(x = math_anxiety_score, y = stress_scaled)) +
+#   scale_color_manual(values = c("Took Advanced Courses" = "#916aa3", "No Upper-Div" = "#e75480")) +
+#   scale_shape_manual(values = c("Took Advanced Courses" = 17, "No Upper-Div" = 16)) +
+#   labs(
+#     title = "Math Anxiety (Trait) vs. Math Anxiety (State)",
+#     x = "Math Anxiety Score (Trait)",
+#     y = "Math Anxiety Score (State)",
+#     color = "Group",
+#     shape = "Group"
+#   ) +
+#   theme_minimal() +
+#   theme(
+#     axis.title.x = element_text(size = 17),
+#     axis.title.y = element_text(size = 17),
+#     axis.text = element_text(size = 14),
+#     plot.title = element_text(size = 25, face = "bold"),
+#     legend.title = element_text(size = 20),
+#     legend.text = element_text(size = 17),
+#     legend.position = c(0.05, 0.95),  # position inside the plot (x=right, y=top)
+#     legend.justification = c("left", "top"),
+#     legend.box.just = "left",
+#     legend.margin = margin(6, 6, 6, 6)
+#   )
+
+# dev.off()
+```
+:::
+
+::: {.cell .code id="eP7sf8oBi08F"}
+``` python
+#show the slope and equtaion of the line# Fit the linear model
+model <- lm(stress_scaled ~ math_anxiety_score, data = df_plot)
+
+# Get model summary
+summary(model)
+
+# Extract slope and intercept
+slope <- coef(model)[2]
+intercept <- coef(model)[1]
+
+# Print equation
+cat("Equation of the line: y =", round(slope, 4), "* x +", round(intercept, 4), "\n")
+```
+:::
+
+::: {.cell .code id="pHGJ1gEyHHxN"}
+``` python
+#how many poeple took adv courses:
+# Count of students by upper-division status (0 = took advanced, 1 = did not)
+table(df$took_upper_div_math_stats, useNA = "ifany")
+```
+:::
+
+::: {.cell .code id="mw6JftMokJK5"}
+``` python
+df_yes <- df %>%
+  filter(took_upper_div_math_stats == 1)
+
+summary(df_yes$math_anxiety_score)
+summary(df_yes$w1mathax8)
+```
+:::
+
+::: {.cell .markdown id="fGfwiApsMuDF"}
+###Slope and scatterplot details
+:::
+
+::: {.cell .code id="Isp7dk_2MxTF"}
+``` python
+model <- lm(stress_scaled ~ math_anxiety_score, data = df_plot)
+summary_model <- summary(model)
+
+# Create a data.frame manually from the coefficients matrix
+model_table <- data.frame(
+  Term = rownames(summary_model$coefficients),
+  Estimate = summary_model$coefficients[, "Estimate"],
+  Std_Error = summary_model$coefficients[, "Std. Error"],
+  t_value = summary_model$coefficients[, "t value"],
+  p_value = summary_model$coefficients[, "Pr(>|t|)"]
+)
+
+print(model_table)
+```
+:::
+
+::: {.cell .markdown id="4eXsXcp-BR63"}
+##correlation
+:::
+
+::: {.cell .code collapsed="true" id="Jn9Xk9437Zbe"}
+``` python
+cor(df$math_anxiety_score, df$stress_score_total, use = "complete.obs", method = "pearson")
+```
+:::
+
+::: {.cell .code id="JzRDzVuMjSgI"}
+``` python
+cor.test(df$math_anxiety_score, df$stress_score_total, use = "complete.obs", alternative ="greater", method = "pearson")
+```
+:::
+
+::: {.cell .code id="SZHsrtUyhG3-"}
+``` python
+cor(df$math_anxiety_score, df$stress_score_total, use = "complete.obs")
+```
+:::
+
+::: {.cell .code id="nDZvQ24sgyNp"}
+``` python
+cor.test(df$math_anxiety_score, df$stress_score_total, use = "complete.obs", method = "pearson")
+```
+:::
+
+::: {.cell .markdown id="shixo-1vgUFt"}
+:::
+
+::: {.cell .markdown id="PU9eXuI37Zdu"}
+cor.test(df$math_anxiety_score, df$stress_score_total, method =
+\"pearson\")
+
+#correlation with pearson/p value
+:::
+
+::: {.cell .code id="7VS01Y367Zf5"}
+``` python
+ggplot()
+```
+:::
+
+::: {.cell .markdown id="5yVTQMho15dv"}
+Took High school Advanced Math Courses
+:::
+
+::: {.cell .code id="0RZcqzvn178t"}
+``` python
+#lower-division math/stats
+df$took_hs_div_math_stats <- apply(df[, c(
+  paste0("w1math", 7:10)
+)], 1, function(x) any(x == 1, na.rm = TRUE))
+
+#(1 = took lower-div, 0 = didn't)
+df$took_hs_div_math_stats <- as.numeric(df$took_hs_div_math_stats)
+```
+:::
+
+::: {.cell .markdown id="g0gmbNCF1Rkj"}
+##Correlation
+:::
+
+::: {.cell .code id="qDzslF1Y1S7a"}
+``` python
+#grouping it
+math_vars1 <- c("w1mathse1", "w1mathse2", "w1mathse3", "w1mathse4", "w1mathse5", "w1mathse6")
+math_vars2 <- c("w1mathse7", "w1mathse8", "w1mathse9", "w1mathse10", "w1mathse11", "w1mathse12")
+math_vars3 <- c("w1mathse13", "w1mathse14", "w1mathse15", "w1mathax1", "w1mathax2", "w1mathax3")
+math_vars4 <- c("w1mathax4", "w1mathax5", "w1mathax6", "w1mathax7", "w1mathax8", "w1mathax9")
+all_math_vars <- c(math_vars1, math_vars2, math_vars3, math_vars4)
+demographic_vars <- c(
+  "age",
+  "gendermale", "genderfemal", "gendernonbinary",
+  "ushome"
+)
+cor_vars <- c("math_anxiety_score", "stress_scaled", all_math_vars, demographic_vars)
+df_cor <- df %>%
+  select(all_of(cor_vars)) %>%
+  filter(if_all(everything(), ~ !is.na(.)))
+cor_matrix <- cor(df_cor, use = "complete.obs")
+round(cor_matrix[c("math_anxiety_score", "stress_scaled"), ], 2)
+library(corrplot)
+corrplot(cor_matrix, method = "circle", type = "upper", tl.col = "black", tl.srt = 45)
+```
+:::
+
+::: {.cell .markdown id="XfBUMJnQ1r_E"}
+####Now we will keep the important correlations
+:::
+
+::: {.cell .code id="MyXSRGLx1uLG"}
+``` python
+library(dplyr)
+library(Hmisc)   # for rcorr()
+library(knitr)   # for neat table output
+math_core_vars <- c(
+  "w1mathse5",  # Good at Math
+  "w1mathse10", # Test Confidence
+  "w1mathse14", # Handle Hard Math
+  "w1mathax3",  # Nervous During Math
+  "w1mathax7",  # Tense Before Math Test
+  "w1mathax8"   # Pop Quiz Anxiety
+)
+
+demo_vars <- c("age", "gendermale", "genderfemal", "ushome")
+
+selected_vars <- c("math_anxiety_score", "stress_scaled", math_core_vars, demo_vars)
+
+# Filter and clean
+df_cor_trimmed <- df %>%
+  select(all_of(selected_vars)) %>%
+  filter(if_all(everything(), ~ !is.na(.)))
+
+# Compute correlation matrix with p-values
+cor_result <- Hmisc::rcorr(as.matrix(df_cor_trimmed))
+
+# Extract correlations and p-values
+cor_vals <- round(cor_result$r, 2)
+p_vals <- cor_result$P
+
+# Add significance stars
+star_matrix <- ifelse(p_vals < 0.001, "***",
+                      ifelse(p_vals < 0.01, "**",
+                             ifelse(p_vals < 0.05, "*", "")))
+
+# Combine r values with stars
+cor_with_stars <- matrix(paste0(cor_vals, star_matrix),
+                         nrow = nrow(cor_vals),
+                         dimnames = dimnames(cor_vals))
+
+# Print correlations of Trait and State anxiety only
+trait_state_corr <- cor_with_stars[c("math_anxiety_score", "stress_scaled"),
+                                   c(math_core_vars, demo_vars, "math_anxiety_score", "stress_scaled")]
+
+# Output as a table
+knitr::kable(trait_state_corr, caption = "Correlations with Trait and State Anxiety (with Significance)")
+```
+:::
+
+::: {.cell .code collapsed="true" id="OYkul672Dqxt"}
+``` python
+summary(data)
+df= data
+dfr= data
+```
+:::
+
+::: {.cell .code collapsed="true" id="ATnk9x3jIYMl"}
+``` python
+colnames(df)
+```
+:::
+
+::: {.cell .code id="bkjDfwNZHsw_"}
+``` python
+# Define the variables you want to summarize
+likert_vars <- c("stress_bin", "math_anxiety_score")  # add others like "anxiety_bin" if needed
+
+# Check which are available
+setdiff(likert_vars, colnames(df))  # Should return character(0)
+
+# Subset safely only the existing ones
+likert_vars <- likert_vars[likert_vars %in% colnames(df)]
+
+# Coerce to numeric if needed
+df[likert_vars] <- lapply(df[likert_vars], function(x) as.numeric(as.character(x)))
+
+# Create summary
+summary_stats <- df[, likert_vars] %>%
+  summarise(across(everything(), list(mean = ~mean(., na.rm = TRUE), sd = ~sd(., na.rm = TRUE))))
+
+print(summary_stats)
+```
+:::
+
+::: {.cell .code collapsed="true" id="qWUl-vaQE_g4"}
+``` python
+likert_vars <- c(
+  "df$took_upper_div_math_stats","anxiety_bin", "stress_bin" # "w1mathaxcheck"
+)
+setdiff(likert_vars, colnames(df))  # This will show any missing columns
+likert_data <- df[, likert_vars]
+
+# Step 3: Summary statistics
+summary_stats <- likert_data %>%
+  summarise(across(everything(), list(mean = ~mean(., na.rm = TRUE), sd = ~sd(., na.rm = TRUE))))
+
+print(summary_stats)
+```
+:::
+
+::: {.cell .markdown id="8slpK8WtPX2F"}
+#t TEST 7/15 CP LEADS
+:::
+
+::: {.cell .code id="E1icpl4bPaTT"}
+``` python
+cor.test(df$math_anxiety_total, df$stress_score_total, use = "complete.obs", alternative = "less", method = "pearson")
+```
+:::
+
+::: {.cell .markdown id="b97DLedOkZPA"}
+#11/7 spring 2025 new w3 code
+:::
+
+::: {.cell .code collapsed="true" id="KftQteBOkXeF"}
+``` python
+system("gdown --id 1uN-IcoS_PDXataHSJHiYi7fsFqo0l0VQ")
+data <-read.csv("mathanxietycombined2025v1.csv")
+
+summary(data)
+df= data
+dfr= data
+```
+:::
+
+::: {.cell .code collapsed="true" id="d8HxKBxklG_s"}
+``` python
+# ====== CREATE MATH ANXIETY SCORE ======
+
+# Identify columns that belong to math anxiety scale (from your dataset)
+math_anxiety_items <- grep("^w1mathax", names(df), value = TRUE)
+
+# Confirm they exist
+math_anxiety_items
+
+# Convert to numeric (in case they were imported as characters)
+df <- df %>%
+    mutate(across(all_of(math_anxiety_items), as.numeric))
+
+# Create the COMPOSITE math anxiety score (mean across items)
+df <- df %>%
+    mutate(math_anxiety_score = rowMeans(across(all_of(math_anxiety_items)), na.rm = TRUE))
+
+summary(df$math_anxiety_score)
+# ====== CREATE PROCRASTINATION SCORE ======
+
+procrast_vars <- c("proc1", "proc2", "proc3", "proc4", "proc5")
+
+df <- df %>%
+    mutate(across(all_of(procrast_vars), as.numeric),
+           procrastination_mean = rowMeans(across(all_of(procrast_vars)), na.rm = TRUE))
+
+summary(df$procrastination_mean)
+
+```
+:::
+
+::: {.cell .code id="CuP1chXHloBw"}
+``` python
+# ====== MULTIPLE CORRELATIONS ======
+# Rename w3stressscore as stress_scaled so code works
+df <- df %>%
+  rename(stress_scaled = w3stressscore)
+
+vars_to_correlate <- c(
+  "math_anxiety_score",
+  "procrastination_mean",
+  "stress_scaled",
+  grep("^mse", names(df), value = TRUE),      # math self efficacy
+  grep("^p[1-9]$", names(df), value = TRUE),  # Big 5 traits (if named p1,p2,...)
+  grep("^n[1-9]$", names(df), value = TRUE)   # need-for-cognition items
+)
+
+df_cor <- df %>% select(all_of(vars_to_correlate))
+
+# correlation matrix
+cor_matrix <- cor(df_cor, use = "pairwise.complete.obs")
+
+# print correlations between math anxiety and everything else
+round(cor_matrix["math_anxiety_score", ], 3)
+```
+:::
+
+::: {.cell .code id="LA6Mza33lz5P"}
+``` python
+ggplot(df, aes(x = procrastination_mean, y = math_anxiety_score)) +
+    geom_point(alpha = .6) +
+    geom_smooth(method = "lm", color = "steelblue", se = TRUE) +
+    theme_minimal() +
+    labs(title = "Relationship Between Procrastination and Math Anxiety",
+         x = "Procrastination Score (mean across proc1–proc5)",
+         y = "Math Anxiety Score")
+```
+:::
+
+::: {.cell .code id="MbAA_9-_l8w_"}
+``` python
+cor_result <- cor.test(df$math_anxiety_score, df$procrastination_mean)
+
+cat(
+  sprintf(
+    "There was a positive correlation between procrastination and math anxiety, r(%d) = %.2f, p = %.3f.",
+    cor_result$parameter,
+    cor_result$estimate,
+    cor_result$p.value
+  )
+)
+```
+:::
+
+::: {.cell .code id="uAiOBhWSl_kZ"}
+``` python
+cor.test(df$math_anxiety_score, df$stress_scaled)
+cor.test(df$math_anxiety_score, df$mse1)   # confidence
+cor.test(df$math_anxiety_score, df$p7)     # personality: anxiety
+cor.test(df$math_anxiety_score, df$n1)     # need for cognition
+```
+:::
+
+::: {.cell .code id="Hdr0xMU2E4rL"}
+``` python
+# 1. CREATE STATE MATH ANXIETY SCORE
+state_math_items <- grep("^ma_state|^mastate", names(df), value = TRUE)
+df <- df %>%
+  mutate(across(all_of(state_math_items), as.numeric))
+df <- df %>%
+  mutate(math_state_anxiety_score = rowMeans(across(all_of(state_math_items)), na.rm = TRUE))
+summary(df$math_state_anxiety_score)
+# 2. CORRELATIONS: STATE ANXIETY & PROCRASTINATION & MATH SCORE
+
+cor_state_proc  <- cor.test(df$math_state_anxiety_score, df$procrastination_mean, use="complete.obs")
+cor_state_score <- cor.test(df$math_state_anxiety_score, df$mathscore, use="complete.obs")
+cor_proc_score  <- cor.test(df$procrastination_mean, df$mathscore, use="complete.obs")
+cor_state_proc
+cor_state_score
+cor_proc_score
+
+# 3. VISUALIZATION (State Anxiety & Procrastination)
+
+ggplot(df, aes(x = procrastination_mean, y = math_state_anxiety_score)) +
+    geom_point(alpha = .6) +
+    geom_smooth(method = "lm") +
+    theme_minimal() +
+    labs(title = "State Math Anxiety vs. Procrastination",
+         x = "Procrastination (mean)",
+         y = "State Math Anxiety Score")
+
+# Visualization: State Anxiety & Math Score
+ggplot(df, aes(x = math_state_anxiety_score, y = mathscore)) +
+    geom_point(alpha = .6) +
+    geom_smooth(method = "lm") +
+    theme_minimal() +
+    labs(title = "State Math Anxiety vs. Math Exam Score",
+         x = "State Math Anxiety Score",
+         y = "Math Exam Score")
+```
+:::
+
+::: {.cell .code id="-8XDlmvsurPc"}
+``` python
+cor_trait_procrast <- cor.test(df$math_anxiety_score, df$procrastination_mean)
+cor_trait_procrast
+```
+:::
+
+::: {.cell .code id="kDuZuNOxvSgi"}
+``` python
+cor_trait_state <- cor.test(df$math_anxiety_score, df$math_state_anxiety_score)
+cor_trait_state
+```
+:::
+
+::: {.cell .code id="mtQl1uu2vSqn"}
+``` python
+cor_trait_score <- cor.test(df$math_anxiety_score, df$mathscore)
+cor_trait_score
+```
+:::
+
+::: {.cell .code id="9xNBh1sjvSvd"}
+``` python
+cor_state_procrast <- cor.test(df$math_state_anxiety_score, df$procrastination_mean)
+cor_state_procrast
+```
+:::
+
+::: {.cell .code id="OnPKLjypvSzr"}
+``` python
+cor_state_score <- cor.test(df$math_state_anxiety_score, df$mathscore)
+cor_state_score
+```
+:::
+
+::: {.cell .code id="iaTBpPfZvePf"}
+``` python
+#clean corelation matrix:
+vars <- df %>%
+  select(math_anxiety_score,      # trait
+         math_state_anxiety_score, # state
+         procrastination_mean,
+         mathscore)
+
+cor_matrix <- cor(vars, use = "pairwise.complete.obs")
+round(cor_matrix, 3)
+```
+:::
+
+::: {.cell .code id="13BZa5jxvkz7"}
+``` python
+ggplot(df, aes(x = math_anxiety_score, y = mathscore)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Trait Math Anxiety and Math Performance",
+       x = "Trait Math Anxiety Score",
+       y = "Math Exam Score")
+```
+:::
+
+::: {.cell .code id="Z8UM9Y9BvtaP"}
+``` python
+ggplot(df, aes(x = math_state_anxiety_score, y = mathscore)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "State Math Anxiety and Math Performance",
+       x = "State Anxiety During Math",
+       y = "Math Exam Score")
+```
+:::
+
+::: {.cell .code id="OCCAnWs9vwfG"}
+``` python
+ggplot(df, aes(x = math_anxiety_score, y = procrastination_mean)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Math Trait Anxiety and Procrastination",
+       x = "Trait Math Anxiety",
+       y = "Procrastination Score")
+```
+:::
+
+::: {.cell .code id="02nyArl6wBpz"}
+``` python
+library(psych)
+
+apa_table <- corr.test(vars)
+apa_table
+```
+:::
+
+::: {.cell .code id="fdl8ZelK9Ocr"}
+``` python
+# ====== 1. State Anxiety → Math Score ======
+
+# Run linear model
+model_state <- lm(mathscore ~ math_state_anxiety_score, data = df)
+
+# Print equation components
+summary(model_state)
+
+# Extract equation in readable form
+intercept_state <- coef(model_state)[1]
+slope_state <- coef(model_state)[2]
+r2_state <- summary(model_state)$r.squared
+p_state <- summary(model_state)$coefficients[2,4]
+
+cat(sprintf(
+  "State Anxiety Regression Equation:\nmathscore = %.3f + (%.3f × state_anxiety)\nR² = %.3f, p = %.4f\n\n",
+  intercept_state, slope_state, r2_state, p_state
+))
+
+# Plot
+ggplot(df, aes(x = math_state_anxiety_score, y = mathscore)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "State Math Anxiety and Math Performance",
+       x = "State Anxiety During Math",
+       y = "Math Exam Score")
+
+
+# ====== 2. Trait Anxiety → Math Score ======
+
+# Run linear model
+model_trait <- lm(mathscore ~ math_anxiety_score, data = df)
+
+# Print equation components
+summary(model_trait)
+
+# Extract equation in readable form
+intercept_trait <- coef(model_trait)[1]
+slope_trait <- coef(model_trait)[2]
+r2_trait <- summary(model_trait)$r.squared
+p_trait <- summary(model_trait)$coefficients[2,4]
+
+cat(sprintf(
+  "Trait Anxiety Regression Equation:\nmathscore = %.3f + (%.3f × trait_anxiety)\nR² = %.3f, p = %.4f\n",
+  intercept_trait, slope_trait, r2_trait, p_trait
+))
+
+# Plot
+ggplot(df, aes(x = math_anxiety_score, y = mathscore)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Trait Math Anxiety and Math Performance",
+       x = "Trait Math Anxiety Score",
+       y = "Math Exam Score")
+```
+:::
