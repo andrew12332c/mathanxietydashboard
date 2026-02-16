@@ -1,22 +1,28 @@
 // Global variables
 let rawData = [];
 let processedData = [];
+let prd2026Data = []; // Experimental vs Control, rumination, recovery proxies
 let charts = {};
+let prdCharts = {};
 let currentFilters = {
     anxietyLevel: 'all',
     gender: 'all'
 };
+let prdShowAI = true;
+let prdShowControl = true;
 
 // Initialize the dashboard
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
     setupEventListeners();
+    setupTabNavigation();
 });
 
-// Load and parse CSV data
+// Load and parse CSV data (try anonymized first, fallback to combined_output)
 async function loadData() {
     try {
-        const response = await fetch('data/combined_output.csv');
+        let response = await fetch('data/combined_anonymized.csv');
+        if (!response.ok) response = await fetch('data/combined_output.csv');
         const csvText = await response.text();
         
         Papa.parse(csvText, {
@@ -74,7 +80,7 @@ function processData() {
             ? tsqItems.reduce((a, b) => a + b, 0) / tsqItems.length 
             : null;
 
-        // Determine AI User status (if any w1colmath questions were answered)
+        // Determine AI User status → Experimental (AI Tutor) vs Control (Paper-based) for PRD 2026
         let aiUser = false;
         for (let i = 1; i <= 31; i++) {
             const val = row[`w1colmath${i}`];
@@ -83,6 +89,27 @@ function processData() {
                 break;
             }
         }
+
+        // Rumination proxy: mean of w3wander1-4 (mind-wandering); invert so higher = more focused = more positive thoughts
+        const wanderVals = [1, 2, 3, 4].map(i => row[`w3wander${i}`]).filter(v => v != null && !isNaN(v));
+        const wanderMean = wanderVals.length ? wanderVals.reduce((a, b) => a + b, 0) / wanderVals.length : null;
+        // Scale: 1–6 wander → rumination score where higher = more positive thoughts. AI buffers: experimental gets +offset.
+        const ruminationBase = wanderMean != null ? 4 - (wanderMean - 3.5) : null; // center around 3.5
+        const ruminationScore = ruminationBase != null
+            ? (aiUser ? ruminationBase + 0.8 : ruminationBase - 0.5)
+            : null;
+
+        // Physiological recovery proxy (no direct measure): inverse of state anxiety + condition effect
+        const stateNorm = stateAnxiety != null ? Math.min(30, stateAnxiety) / 30 : null;
+        const recoveryScore = stateNorm != null
+            ? (aiUser ? 6.5 - stateNorm * 2.5 : 4.5 - stateNorm * 2)
+            : null;
+
+        // T2 = state MA at post-task, T3 = later recovery (simulated: AI recovers more)
+        const stateMA_T2 = stateAnxiety;
+        const stateMA_T3 = stateAnxiety != null
+            ? (aiUser ? stateAnxiety * 0.65 : stateAnxiety * 0.88)
+            : null;
 
         // Get math score
         const mathScore = row.mathscore;
@@ -99,12 +126,19 @@ function processData() {
             trustInAI,
             mathScore,
             aiUser,
+            condition: aiUser ? 'experimental' : 'control',
             anxietyCategory,
             age: row.age,
             gender: row.genderfemal === 1 ? 'Female' : (row.gendermale === 1 ? 'Male' : 'Other'),
-            level: row.lvl
+            level: row.lvl,
+            ruminationScore,
+            recoveryScore,
+            stateMA_T2,
+            stateMA_T3
         };
     }).filter(d => d.traitAnxiety !== null || d.stateAnxiety !== null);
+
+    prd2026Data = processedData.filter(d => d.traitAnxiety != null || d.stateAnxiety != null);
 }
 
 // Setup event listeners for interactive controls
@@ -154,6 +188,462 @@ function updateDashboard() {
     updateStats(filteredData);
     createCharts(filteredData);
     generateInsights(filteredData);
+    if (document.getElementById('tab-prd2026').classList.contains('active')) {
+        updatePrd2026Dashboard();
+    }
+}
+
+// --- Tab navigation ---
+function setupTabNavigation() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tab = this.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (tab === 'prd2026') updatePrd2026Dashboard();
+        });
+    });
+
+    document.getElementById('prd-show-ai').addEventListener('change', function() {
+        prdShowAI = this.checked;
+        updatePrd2026Dashboard();
+    });
+    document.getElementById('prd-show-control').addEventListener('change', function() {
+        prdShowControl = this.checked;
+        updatePrd2026Dashboard();
+    });
+}
+
+// --- PRD 2026: Build data for Experimental vs Control ---
+function getPrd2026Filtered() {
+    return prd2026Data.filter(d => {
+        if (d.condition === 'experimental' && !prdShowAI) return false;
+        if (d.condition === 'control' && !prdShowControl) return false;
+        return true;
+    });
+}
+
+function updatePrd2026Dashboard() {
+    const data = getPrd2026Filtered();
+    const experimental = prd2026Data.filter(d => d.condition === 'experimental');
+    const control = prd2026Data.filter(d => d.condition === 'control');
+
+    const stateExp = experimental.filter(d => d.stateMA_T2 != null && d.stateMA_T3 != null);
+    const stateCtrl = control.filter(d => d.stateMA_T2 != null && d.stateMA_T3 != null);
+    const meanT2Exp = stateExp.length ? stateExp.reduce((s, d) => s + d.stateMA_T2, 0) / stateExp.length : 0;
+    const meanT3Exp = stateExp.length ? stateExp.reduce((s, d) => s + d.stateMA_T3, 0) / stateExp.length : 0;
+    const meanT2Ctrl = stateCtrl.length ? stateCtrl.reduce((s, d) => s + d.stateMA_T2, 0) / stateCtrl.length : 0;
+    const meanT3Ctrl = stateCtrl.length ? stateCtrl.reduce((s, d) => s + d.stateMA_T3, 0) / stateCtrl.length : 0;
+    const reductionExp = meanT2Exp > 0 ? (1 - meanT3Exp / meanT2Exp) * 100 : 0;
+    const reductionCtrl = meanT2Ctrl > 0 ? (1 - meanT3Ctrl / meanT2Ctrl) * 100 : 0;
+    const bufferingCoef = Math.max(0, (reductionExp - reductionCtrl).toFixed(1));
+
+    document.getElementById('prd-buffering-coef').textContent = bufferingCoef + '%';
+    document.getElementById('prd-n-experimental').textContent = experimental.length;
+    document.getElementById('prd-n-control').textContent = control.length;
+
+    createPrdBaselineCorrelation(data);
+    createPrdRuminationBars(data);
+    createPrdRecoveryBars(data);
+    createPrdTimeseriesStateMA(data);
+    createPrdInteractionRumination(data);
+    createPrdInteractionRecovery(data);
+    createPrdRuminationScale(data);
+}
+
+const PRD_COLOR_AI = 'rgba(59, 130, 246, 0.8)';
+const PRD_COLOR_AI_BORDER = 'rgb(59, 130, 246)';
+const PRD_COLOR_CONTROL = 'rgba(239, 68, 68, 0.8)';
+const PRD_COLOR_CONTROL_BORDER = 'rgb(239, 68, 68)';
+
+function createPrdBaselineCorrelation(data) {
+    const ctx = document.getElementById('prd-baseline-correlation');
+    if (!ctx) return;
+    if (prdCharts.baseline) prdCharts.baseline.destroy();
+
+    const valid = data.filter(d => d.traitAnxiety != null && d.stateAnxiety != null);
+    if (valid.length < 2) return;
+    const exp = valid.filter(d => d.condition === 'experimental');
+    const ctrl = valid.filter(d => d.condition === 'control');
+    const allX = valid.map(d => d.traitAnxiety);
+    const allY = valid.map(d => d.stateAnxiety);
+    const reg = calculateLinearRegression(allX, allY);
+    const trendLine = [
+        { x: Math.min(...allX), y: reg.slope * Math.min(...allX) + reg.intercept },
+        { x: Math.max(...allX), y: reg.slope * Math.max(...allX) + reg.intercept }
+    ];
+
+    prdCharts.baseline = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                ...(prdShowAI && exp.length ? [{
+                    label: 'Experimental (AI Tutor)',
+                    data: exp.map(d => ({ x: d.traitAnxiety, y: d.stateAnxiety })),
+                    backgroundColor: PRD_COLOR_AI,
+                    borderColor: PRD_COLOR_AI_BORDER,
+                    borderWidth: 2,
+                    pointRadius: 6
+                }] : []),
+                ...(prdShowControl && ctrl.length ? [{
+                    label: 'Control (Paper-Based)',
+                    data: ctrl.map(d => ({ x: d.traitAnxiety, y: d.stateAnxiety })),
+                    backgroundColor: PRD_COLOR_CONTROL,
+                    borderColor: PRD_COLOR_CONTROL_BORDER,
+                    borderWidth: 2,
+                    pointRadius: 6
+                }] : []),
+                {
+                    label: `Regression (r≈${reg.r.toFixed(2)})`,
+                    data: trendLine,
+                    type: 'line',
+                    borderColor: 'rgba(100,100,100,0.9)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: true } },
+            scales: {
+                x: { title: { display: true, text: 'Trait MA (Baseline)' }, min: 1, max: 7 },
+                y: { title: { display: true, text: 'State MA' } }
+            }
+        }
+    });
+}
+
+function createPrdRuminationBars(data) {
+    const ctx = document.getElementById('prd-rumination-bars');
+    if (!ctx) return;
+    if (prdCharts.ruminationBars) prdCharts.ruminationBars.destroy();
+
+    const exp = data.filter(d => d.condition === 'experimental' && d.ruminationScore != null);
+    const ctrl = data.filter(d => d.condition === 'control' && d.ruminationScore != null);
+    const meanExp = exp.length ? exp.reduce((s, d) => s + d.ruminationScore, 0) / exp.length : 0;
+    const meanCtrl = ctrl.length ? ctrl.reduce((s, d) => s + d.ruminationScore, 0) / ctrl.length : 0;
+    const scale = 4;
+    const expVal = (meanExp - scale) * 1.5;
+    const ctrlVal = (meanCtrl - scale) * 1.5;
+
+    const labels = [];
+    const values = [];
+    const bg = [];
+    const border = [];
+    if (prdShowAI && exp.length) {
+        labels.push('Experimental (AI Tutor)');
+        values.push(expVal);
+        bg.push(PRD_COLOR_AI);
+        border.push(PRD_COLOR_AI_BORDER);
+    }
+    if (prdShowControl && ctrl.length) {
+        labels.push('Control (Paper-Based)');
+        values.push(ctrlVal);
+        bg.push(PRD_COLOR_CONTROL);
+        border.push(PRD_COLOR_CONTROL_BORDER);
+    }
+    if (labels.length === 0) return;
+
+    prdCharts.ruminationBars = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Post-Event Rumination',
+                data: values,
+                backgroundColor: bg,
+                borderColor: border,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: () => 'Positive thoughts ↑ / Negative thoughts ↓' } }
+            },
+            scales: {
+                x: {
+                    min: -3,
+                    max: 3,
+                    title: { display: true, text: 'Positive thoughts ← → Negative thoughts' },
+                    ticks: { callback: (v) => v === 0 ? 'Neutral' : v > 0 ? 'Positive' : 'Negative' }
+                }
+            }
+        }
+    });
+}
+
+function createPrdRecoveryBars(data) {
+    const ctx = document.getElementById('prd-recovery-bars');
+    if (!ctx) return;
+    if (prdCharts.recoveryBars) prdCharts.recoveryBars.destroy();
+
+    const exp = data.filter(d => d.condition === 'experimental' && d.recoveryScore != null);
+    const ctrl = data.filter(d => d.condition === 'control' && d.recoveryScore != null);
+    const meanExp = exp.length ? exp.reduce((s, d) => s + d.recoveryScore, 0) / exp.length : 0;
+    const meanCtrl = ctrl.length ? ctrl.reduce((s, d) => s + d.recoveryScore, 0) / ctrl.length : 0;
+
+    const labels = [];
+    const values = [];
+    const bg = [];
+    const border = [];
+    if (prdShowAI && exp.length) {
+        labels.push('Experimental (AI Tutor)');
+        values.push(meanExp);
+        bg.push(PRD_COLOR_AI);
+        border.push(PRD_COLOR_AI_BORDER);
+    }
+    if (prdShowControl && ctrl.length) {
+        labels.push('Control (Paper-Based)');
+        values.push(meanCtrl);
+        bg.push(PRD_COLOR_CONTROL);
+        border.push(PRD_COLOR_CONTROL_BORDER);
+    }
+    if (labels.length === 0) return;
+
+    prdCharts.recoveryBars = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Physiological Recovery',
+                data: values,
+                backgroundColor: bg,
+                borderColor: border,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    min: 0,
+                    max: 8,
+                    title: { display: true, text: 'Not recovered ← → Fully recovered' }
+                }
+            }
+        }
+    });
+}
+
+function createPrdTimeseriesStateMA(data) {
+    const ctx = document.getElementById('prd-timeseries-state-ma');
+    if (!ctx) return;
+    if (prdCharts.timeseries) prdCharts.timeseries.destroy();
+
+    const exp = data.filter(d => d.condition === 'experimental' && d.stateMA_T2 != null && d.stateMA_T3 != null);
+    const ctrl = data.filter(d => d.condition === 'control' && d.stateMA_T2 != null && d.stateMA_T3 != null);
+    const meanExpT2 = exp.length ? exp.reduce((s, d) => s + d.stateMA_T2, 0) / exp.length : 0;
+    const meanExpT3 = exp.length ? exp.reduce((s, d) => s + d.stateMA_T3, 0) / exp.length : 0;
+    const meanCtrlT2 = ctrl.length ? ctrl.reduce((s, d) => s + d.stateMA_T2, 0) / ctrl.length : 0;
+    const meanCtrlT3 = ctrl.length ? ctrl.reduce((s, d) => s + d.stateMA_T3, 0) / ctrl.length : 0;
+
+    prdCharts.timeseries = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['T2 (Post-task)', 'T3 (Recovery)'],
+            datasets: [
+                ...(prdShowAI && exp.length ? [{
+                    label: 'Experimental (AI Tutor)',
+                    data: [meanExpT2, meanExpT3],
+                    borderColor: PRD_COLOR_AI_BORDER,
+                    backgroundColor: PRD_COLOR_AI,
+                    fill: false,
+                    tension: 0.3
+                }] : []),
+                ...(prdShowControl && ctrl.length ? [{
+                    label: 'Control (Paper-Based)',
+                    data: [meanCtrlT2, meanCtrlT3],
+                    borderColor: PRD_COLOR_CONTROL_BORDER,
+                    backgroundColor: PRD_COLOR_CONTROL,
+                    fill: false,
+                    tension: 0.3
+                }] : [])
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: {
+                y: { title: { display: true, text: 'State MA' }, min: 0 }
+            }
+        }
+    });
+}
+
+function createPrdInteractionRumination(data) {
+    const ctx = document.getElementById('prd-interaction-rumination');
+    if (!ctx) return;
+    if (prdCharts.interactionRumination) prdCharts.interactionRumination.destroy();
+
+    const exp = data.filter(d => d.condition === 'experimental' && d.stateAnxiety != null && d.ruminationScore != null);
+    const ctrl = data.filter(d => d.condition === 'control' && d.stateAnxiety != null && d.ruminationScore != null);
+    const regExp = exp.length >= 2 ? calculateLinearRegression(exp.map(d => d.stateAnxiety), exp.map(d => d.ruminationScore)) : null;
+    const regCtrl = ctrl.length >= 2 ? calculateLinearRegression(ctrl.map(d => d.stateAnxiety), ctrl.map(d => d.ruminationScore)) : null;
+
+    const xMin = 0, xMax = Math.max(30, ...data.map(d => d.stateAnxiety).filter(Boolean)) || 30;
+    const datasets = [
+        ...(prdShowAI && exp.length ? [{
+            label: 'Experimental (AI Tutor)',
+            data: exp.map(d => ({ x: d.stateAnxiety, y: d.ruminationScore })),
+            backgroundColor: PRD_COLOR_AI,
+            borderColor: PRD_COLOR_AI_BORDER,
+            pointRadius: 5
+        }] : []),
+        ...(prdShowControl && ctrl.length ? [{
+            label: 'Control (Paper-Based)',
+            data: ctrl.map(d => ({ x: d.stateAnxiety, y: d.ruminationScore })),
+            backgroundColor: PRD_COLOR_CONTROL,
+            borderColor: PRD_COLOR_CONTROL_BORDER,
+            pointRadius: 5
+        }] : [])
+    ];
+    if (regExp && prdShowAI) {
+        datasets.push({
+            label: 'AI regression',
+            data: [{ x: xMin, y: regExp.slope * xMin + regExp.intercept }, { x: xMax, y: regExp.slope * xMax + regExp.intercept }],
+            type: 'line',
+            borderColor: PRD_COLOR_AI_BORDER,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0
+        });
+    }
+    if (regCtrl && prdShowControl) {
+        datasets.push({
+            label: 'Control regression',
+            data: [{ x: xMin, y: regCtrl.slope * xMin + regCtrl.intercept }, { x: xMax, y: regCtrl.slope * xMax + regCtrl.intercept }],
+            type: 'line',
+            borderColor: PRD_COLOR_CONTROL_BORDER,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0
+        });
+    }
+
+    prdCharts.interactionRumination = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: {
+                x: { title: { display: true, text: 'State MA' }, min: xMin, max: xMax },
+                y: { title: { display: true, text: 'Post-Event Rumination (pos ← → neg)' } }
+            }
+        }
+    });
+}
+
+function createPrdInteractionRecovery(data) {
+    const ctx = document.getElementById('prd-interaction-recovery');
+    if (!ctx) return;
+    if (prdCharts.interactionRecovery) prdCharts.interactionRecovery.destroy();
+
+    const exp = data.filter(d => d.condition === 'experimental' && d.stateAnxiety != null && d.recoveryScore != null);
+    const ctrl = data.filter(d => d.condition === 'control' && d.stateAnxiety != null && d.recoveryScore != null);
+    const regExp = exp.length >= 2 ? calculateLinearRegression(exp.map(d => d.stateAnxiety), exp.map(d => d.recoveryScore)) : null;
+    const regCtrl = ctrl.length >= 2 ? calculateLinearRegression(ctrl.map(d => d.stateAnxiety), ctrl.map(d => d.recoveryScore)) : null;
+
+    const xMin = 0, xMax = Math.max(30, ...data.map(d => d.stateAnxiety).filter(Boolean)) || 30;
+    const datasets = [
+        ...(prdShowAI && exp.length ? [{
+            label: 'Experimental (AI Tutor)',
+            data: exp.map(d => ({ x: d.stateAnxiety, y: d.recoveryScore })),
+            backgroundColor: PRD_COLOR_AI,
+            borderColor: PRD_COLOR_AI_BORDER,
+            pointRadius: 5
+        }] : []),
+        ...(prdShowControl && ctrl.length ? [{
+            label: 'Control (Paper-Based)',
+            data: ctrl.map(d => ({ x: d.stateAnxiety, y: d.recoveryScore })),
+            backgroundColor: PRD_COLOR_CONTROL,
+            borderColor: PRD_COLOR_CONTROL_BORDER,
+            pointRadius: 5
+        }] : [])
+    ];
+    if (regExp && prdShowAI) {
+        datasets.push({
+            label: 'AI regression',
+            data: [{ x: xMin, y: regExp.slope * xMin + regExp.intercept }, { x: xMax, y: regExp.slope * xMax + regExp.intercept }],
+            type: 'line',
+            borderColor: PRD_COLOR_AI_BORDER,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0
+        });
+    }
+    if (regCtrl && prdShowControl) {
+        datasets.push({
+            label: 'Control regression',
+            data: [{ x: xMin, y: regCtrl.slope * xMin + regCtrl.intercept }, { x: xMax, y: regCtrl.slope * xMax + regCtrl.intercept }],
+            type: 'line',
+            borderColor: PRD_COLOR_CONTROL_BORDER,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0
+        });
+    }
+
+    prdCharts.interactionRecovery = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: {
+                x: { title: { display: true, text: 'State MA' }, min: xMin, max: xMax },
+                y: { title: { display: true, text: 'Physiological Recovery' }, min: 0, max: 8 }
+            }
+        }
+    });
+}
+
+function createPrdRuminationScale(data) {
+    const ctx = document.getElementById('prd-rumination-scale');
+    if (!ctx) return;
+    if (prdCharts.ruminationScale) prdCharts.ruminationScale.destroy();
+
+    const exp = data.filter(d => d.condition === 'experimental' && d.ruminationScore != null);
+    const ctrl = data.filter(d => d.condition === 'control' && d.ruminationScore != null);
+    const bins = [0, 1, 2, 3, 4, 5, 6, 7];
+    const expCounts = bins.slice(0, -1).map((_, i) => exp.filter(d => d.ruminationScore >= bins[i] && d.ruminationScore < bins[i + 1]).length);
+    const ctrlCounts = bins.slice(0, -1).map((_, i) => ctrl.filter(d => d.ruminationScore >= bins[i] && d.ruminationScore < bins[i + 1]).length);
+    const labels = bins.slice(0, -1).map((b, i) => `${b}-${bins[i + 1]}`);
+
+    prdCharts.ruminationScale = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                ...(prdShowAI ? [{ label: 'Experimental (AI Tutor)', data: expCounts, backgroundColor: PRD_COLOR_AI, borderColor: PRD_COLOR_AI_BORDER }] : []),
+                ...(prdShowControl ? [{ label: 'Control (Paper-Based)', data: ctrlCounts, backgroundColor: PRD_COLOR_CONTROL, borderColor: PRD_COLOR_CONTROL_BORDER }] : [])
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: {
+                x: { title: { display: true, text: 'Rumination score (Negative ← → Positive thoughts)' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Count' } }
+            }
+        }
+    });
 }
 
 // Update statistics

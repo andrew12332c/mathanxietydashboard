@@ -389,3 +389,149 @@ footer {
 .axis text {
     fill: var(--text-secondary);
 }
+
+/* Tab navigation */
+.tab-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* Math Anxiety 2026 AI Results section */
+.prd2026-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.prd2026-header h2 {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.prd-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 16px;
+}
+
+.prd-legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.legend-swatch {
+    width: 20px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+.legend-ai .legend-swatch {
+    background: rgb(59, 130, 246);
+}
+
+.legend-control .legend-swatch {
+    background: rgb(239, 68, 68);
+}
+
+.prd2026-controls {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+}
+
+.prd2026-controls h3 {
+    color: var(--secondary-color);
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+.prd-controls-inner {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.prd-controls-inner label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.prd2026-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.prd2026-stats .prd-stat {
+    min-width: 0;
+}
+
+.prd2026-viz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.prd2026-viz-grid .viz-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.prd2026-viz-grid .chart-wrap {
+    min-height: 320px;
+    position: relative;
+}
+
+.prd2026-viz-grid canvas {
+    max-height: 400px;
+}

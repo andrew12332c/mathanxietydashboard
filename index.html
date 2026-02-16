@@ -24,6 +24,12 @@
             </p>
         </header>
 
+        <nav class="tab-nav">
+            <button type="button" class="tab-btn active" data-tab="current">2025 Dashboard</button>
+            <button type="button" class="tab-btn" data-tab="prd2026">Math Anxiety 2026 AI Results</button>
+        </nav>
+
+        <section id="tab-current" class="tab-panel active">
         <div class="info-panel">
             <div class="info-card">
                 <h3>Research Questions</h3>
@@ -131,6 +137,101 @@
         <footer>
             <p>Research Dashboard - Math Anxiety & AI Tutoring Study - 2025</p>
         </footer>
+        </section>
+
+        <section id="tab-prd2026" class="tab-panel">
+            <div class="prd2026-header">
+                <h2>AI & Math Anxiety Winter 2026 Predictions</h2>
+                <p class="prd-subtitle">AI-Enhanced Math Anxiety (MA) Dashboard — Trait vs. State MA, buffering effect, and interaction analysis</p>
+                <div class="prd-legend">
+                    <span class="legend-item legend-ai"><span class="legend-swatch"></span> Blue: Used AI to review</span>
+                    <span class="legend-item legend-control"><span class="legend-swatch"></span> Red: Paper/Review sheet (control)</span>
+                </div>
+            </div>
+
+            <div class="prd2026-controls">
+                <h3>Group Toggle</h3>
+                <div class="prd-controls-inner">
+                    <label><input type="checkbox" id="prd-show-ai" checked> Show AI review (Blue)</label>
+                    <label><input type="checkbox" id="prd-show-control" checked> Show Paper/Review sheet (Red)</label>
+                </div>
+            </div>
+
+            <div class="prd2026-stats">
+                <div class="stat-box prd-stat">
+                    <div class="stat-value" id="prd-buffering-coef">-</div>
+                    <div class="stat-label">Buffering Coefficient (%)</div>
+                </div>
+                <div class="stat-box prd-stat">
+                    <div class="stat-value" id="prd-n-experimental">-</div>
+                    <div class="stat-label">Experimental (AI Tutor) n</div>
+                </div>
+                <div class="stat-box prd-stat">
+                    <div class="stat-value" id="prd-n-control">-</div>
+                    <div class="stat-label">Control n</div>
+                </div>
+            </div>
+
+            <div class="prd2026-viz-grid">
+                <div class="viz-card full-width">
+                    <h3>A. Baseline Correlation Plot</h3>
+                    <p class="viz-description"><strong>Blue points</strong> = participants who used AI to review; <strong>red points</strong> = paper/review sheet (control). Trait MA (baseline) vs. State MA (Week 4 assessment). Before manipulation, both groups follow the same upward trend (r ≈ .30).</p>
+                    <div class="chart-wrap">
+                        <canvas id="prd-baseline-correlation"></canvas>
+                    </div>
+                </div>
+
+                <div class="viz-card">
+                    <h3>B1. Post-Event Rumination</h3>
+                    <p class="viz-description">AI tutor buffers negative thoughts; control shows deeper negative rumination.</p>
+                    <div class="chart-wrap">
+                        <canvas id="prd-rumination-bars"></canvas>
+                    </div>
+                </div>
+                <div class="viz-card">
+                    <h3>B2. Post-Event Physiological Recovery</h3>
+                    <p class="viz-description">AI Tutor group shows higher physiological recovery; control lower.</p>
+                    <div class="chart-wrap">
+                        <canvas id="prd-recovery-bars"></canvas>
+                    </div>
+                </div>
+
+                <div class="viz-card full-width">
+                    <h3>Time-Series: State MA (T2 → T3)</h3>
+                    <p class="viz-description">Steeper recovery slope for AI Tutor users.</p>
+                    <div class="chart-wrap">
+                        <canvas id="prd-timeseries-state-ma"></canvas>
+                    </div>
+                </div>
+
+                <div class="viz-card">
+                    <h3>C1. State MA vs. Rumination (Interaction)</h3>
+                    <p class="viz-description">AI Tutor line flatter: high State MA does not spiral into negative rumination.</p>
+                    <div class="chart-wrap">
+                        <canvas id="prd-interaction-rumination"></canvas>
+                    </div>
+                </div>
+                <div class="viz-card">
+                    <h3>C2. State MA vs. Physiological Recovery (Interaction)</h3>
+                    <p class="viz-description">AI Tutor line higher: buffering against physical toll of anxiety.</p>
+                    <div class="chart-wrap">
+                        <canvas id="prd-interaction-recovery"></canvas>
+                    </div>
+                </div>
+
+                <div class="viz-card full-width">
+                    <h3>Rumination Scale</h3>
+                    <p class="viz-description">Distribution from negative to positive/neutral thoughts by condition.</p>
+                    <div class="chart-wrap">
+                        <canvas id="prd-rumination-scale"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>Math Anxiety 2026 AI Results — PRD: AI-Enhanced Math Anxiety Dashboard</p>
+            </footer>
+        </section>
     </div>
 
     <script src="script.js"></script>
