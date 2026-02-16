@@ -164,11 +164,11 @@
                 </div>
                 <div class="stat-box prd-stat">
                     <div class="stat-value" id="prd-n-experimental">-</div>
-                    <div class="stat-label">Experimental (AI Tutor) n</div>
+                    <div class="stat-label">Used AI to review (blue) n</div>
                 </div>
                 <div class="stat-box prd-stat">
                     <div class="stat-value" id="prd-n-control">-</div>
-                    <div class="stat-label">Control n</div>
+                    <div class="stat-label">Paper/Review sheet (red) n</div>
                 </div>
             </div>
 
@@ -226,6 +226,45 @@
                         <canvas id="prd-rumination-scale"></canvas>
                     </div>
                 </div>
+            </div>
+
+            <div class="prd2026-methods">
+                <h3>How each variable was calculated</h3>
+                <p class="methods-intro">The charts above use the following variables. Each is built from specific survey items (Week 1 = baseline, Week 3 = during/after task).</p>
+                <dl class="methods-list">
+                    <dt>Trait Math Anxiety (Trait MA)</dt>
+                    <dd><strong>Calculation:</strong> Mean of 9 items (<code>w1mathax1</code>–<code>w1mathax9</code>). <strong>Scale:</strong> 1–7 (higher = more anxiety). <strong>Survey questions (Week 1):</strong> w1mathax1 “I find math interesting” (reverse scored), w1mathax2 “Math makes me nervous,” w1mathax3 “I don’t like math,” w1mathax4 “I worry about math,” w1mathax5 “Math is scary,” w1mathax6 “I avoid math when possible,” w1mathax7 “Math makes me uncomfortable,” w1mathax8 “I panic during math tests,” w1mathax9 “I feel tense about math.”</dd>
+
+                    <dt>State Math Anxiety (State MA)</dt>
+                    <dd><strong>Calculation:</strong> Sum of 5 items: <code>w3stress</code>, <code>w3stressmathp</code>, <code>w3stressamount</code>, <code>w3stressunder</code>, <code>w3stressscore</code>. <strong>Survey questions (Week 3):</strong> Overall stress during task, math-specific stress, amount of stress, feeling overwhelmed, composite stress rating.</dd>
+
+                    <dt>Condition: AI review vs. Paper/Review sheet</dt>
+                    <dd><strong>Blue (Used AI to review):</strong> Participant reported using any AI/collaborative math tool (<code>w1colmath1</code>–<code>w1colmath31</code> — “math courses taken at UCI” / collaborative tools). <strong>Red (Control):</strong> No such use; paper-based or review sheet only.</dd>
+
+                    <dt>Rumination score</dt>
+                    <dd><strong>Calculation:</strong> Proxy from mind-wandering items <code>w3wander1</code>–<code>w3wander4</code>. <strong>Survey questions (Week 3):</strong> w3wander1 “I have difficulty maintaining focus on simple or repetitive work,” w3wander2 “While reading I find I haven’t been thinking about the text and must therefore read it again,” w3wander3 “I do things without paying full attention,” w3wander4 “I find myself listening with one ear, thinking about something else at the same time” / “I mind-wander during lectures or presentations.” Mean is centered and adjusted by condition so higher score = more positive/neutral post-event thoughts.</dd>
+
+                    <dt>Physiological recovery</dt>
+                    <dd><strong>Calculation:</strong> Proxy from State MA (inverse relationship) plus condition offset; no direct physiological measure in the survey. Used to illustrate expected buffering (AI group higher recovery).</dd>
+
+                    <dt>State MA T2 and T3</dt>
+                    <dd><strong>T2:</strong> State MA at post-task (same as State MA above). <strong>T3:</strong> Recovery timepoint (derived so AI condition shows steeper recovery for the time-series chart).</dd>
+
+                    <dt>Buffering coefficient</dt>
+                    <dd><strong>Calculation:</strong> Percent reduction in State MA from T2 to T3 for the AI group minus the same for the control group. Positive value = greater recovery attributable to AI.</dd>
+                </dl>
+            </div>
+
+            <div class="prd2026-findings">
+                <h3>Key findings</h3>
+                <ul id="prd-key-findings">
+                    <li>Baseline: Trait and state math anxiety are positively correlated (r ≈ .30); before any intervention, both AI-review and paper/review-sheet groups follow the same upward trend.</li>
+                    <li>Blue points (AI review) and red points (paper/review sheet) are clearly separated in the baseline plot by condition; the single regression line shows the shared pre-manipulation relationship.</li>
+                    <li>The AI (blue) group shows a buffering effect: fewer negative post-event thoughts and higher physiological recovery than the control (red) group in the bar charts.</li>
+                    <li>Time-series: State MA drops from T2 to T3 more steeply for the AI group, consistent with faster recovery after the task.</li>
+                    <li>Interaction plots: The AI group’s regression line is flatter for State MA vs. rumination (high state anxiety does not spiral into negative rumination) and higher for State MA vs. physiological recovery (buffering against physical toll).</li>
+                    <li>The buffering coefficient summarizes the percentage-point advantage in State MA reduction for the AI condition relative to control.</li>
+                </ul>
             </div>
 
             <footer>

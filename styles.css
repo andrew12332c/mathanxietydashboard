@@ -535,3 +535,85 @@ footer {
 .prd2026-viz-grid canvas {
     max-height: 400px;
 }
+
+/* Methods / variable description */
+.prd2026-methods {
+    background: var(--card-bg);
+    padding: 28px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.prd2026-methods h3 {
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    font-size: 1.25rem;
+}
+
+.prd2026-methods .methods-intro {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.7;
+}
+
+.prd2026-methods .methods-list {
+    margin: 0;
+}
+
+.prd2026-methods .methods-list dt {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 16px;
+    margin-bottom: 6px;
+}
+
+.prd2026-methods .methods-list dt:first-child {
+    margin-top: 0;
+}
+
+.prd2026-methods .methods-list dd {
+    margin-left: 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    padding-bottom: 4px;
+}
+
+.prd2026-methods .methods-list code {
+    background: var(--border-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+/* Key findings */
+.prd2026-findings {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    padding: 28px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+    border-left: 4px solid var(--accent-color);
+}
+
+.prd2026-findings h3 {
+    color: #92400e;
+    margin-bottom: 16px;
+    font-size: 1.25rem;
+}
+
+.prd2026-findings ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--text-primary);
+    line-height: 1.8;
+}
+
+.prd2026-findings li {
+    margin-bottom: 10px;
+}
+
+.prd2026-findings li:last-child {
+    margin-bottom: 0;
+}

@@ -280,7 +280,7 @@ function createPrdBaselineCorrelation(data) {
         data: {
             datasets: [
                 ...(prdShowAI && exp.length ? [{
-                    label: 'Experimental (AI Tutor)',
+                    label: 'Used AI to review (blue)',
                     data: exp.map(d => ({ x: d.traitAnxiety, y: d.stateAnxiety })),
                     backgroundColor: PRD_COLOR_AI,
                     borderColor: PRD_COLOR_AI_BORDER,
@@ -288,7 +288,7 @@ function createPrdBaselineCorrelation(data) {
                     pointRadius: 6
                 }] : []),
                 ...(prdShowControl && ctrl.length ? [{
-                    label: 'Control (Paper-Based)',
+                    label: 'Paper/Review sheet (red)',
                     data: ctrl.map(d => ({ x: d.traitAnxiety, y: d.stateAnxiety })),
                     backgroundColor: PRD_COLOR_CONTROL,
                     borderColor: PRD_COLOR_CONTROL_BORDER,
@@ -311,10 +311,10 @@ function createPrdBaselineCorrelation(data) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: { legend: { display: true } },
+            plugins: { legend: { display: true, position: 'top' } },
             scales: {
                 x: { title: { display: true, text: 'Trait MA (Baseline)' }, min: 1, max: 7 },
-                y: { title: { display: true, text: 'State MA' } }
+                y: { title: { display: true, text: 'State MA (Week 4 assessment)' } }
             }
         }
     });
@@ -338,13 +338,13 @@ function createPrdRuminationBars(data) {
     const bg = [];
     const border = [];
     if (prdShowAI && exp.length) {
-        labels.push('Experimental (AI Tutor)');
+        labels.push('Used AI to review (blue)');
         values.push(expVal);
         bg.push(PRD_COLOR_AI);
         border.push(PRD_COLOR_AI_BORDER);
     }
     if (prdShowControl && ctrl.length) {
-        labels.push('Control (Paper-Based)');
+        labels.push('Paper/Review sheet (red)');
         values.push(ctrlVal);
         bg.push(PRD_COLOR_CONTROL);
         border.push(PRD_COLOR_CONTROL_BORDER);
@@ -397,13 +397,13 @@ function createPrdRecoveryBars(data) {
     const bg = [];
     const border = [];
     if (prdShowAI && exp.length) {
-        labels.push('Experimental (AI Tutor)');
+        labels.push('Used AI to review (blue)');
         values.push(meanExp);
         bg.push(PRD_COLOR_AI);
         border.push(PRD_COLOR_AI_BORDER);
     }
     if (prdShowControl && ctrl.length) {
-        labels.push('Control (Paper-Based)');
+        labels.push('Paper/Review sheet (red)');
         values.push(meanCtrl);
         bg.push(PRD_COLOR_CONTROL);
         border.push(PRD_COLOR_CONTROL_BORDER);
@@ -455,7 +455,7 @@ function createPrdTimeseriesStateMA(data) {
             labels: ['T2 (Post-task)', 'T3 (Recovery)'],
             datasets: [
                 ...(prdShowAI && exp.length ? [{
-                    label: 'Experimental (AI Tutor)',
+                    label: 'Used AI to review (blue)',
                     data: [meanExpT2, meanExpT3],
                     borderColor: PRD_COLOR_AI_BORDER,
                     backgroundColor: PRD_COLOR_AI,
@@ -463,7 +463,7 @@ function createPrdTimeseriesStateMA(data) {
                     tension: 0.3
                 }] : []),
                 ...(prdShowControl && ctrl.length ? [{
-                    label: 'Control (Paper-Based)',
+                    label: 'Paper/Review sheet (red)',
                     data: [meanCtrlT2, meanCtrlT3],
                     borderColor: PRD_COLOR_CONTROL_BORDER,
                     backgroundColor: PRD_COLOR_CONTROL,
@@ -495,14 +495,14 @@ function createPrdInteractionRumination(data) {
     const xMin = 0, xMax = Math.max(30, ...data.map(d => d.stateAnxiety).filter(Boolean)) || 30;
     const datasets = [
         ...(prdShowAI && exp.length ? [{
-            label: 'Experimental (AI Tutor)',
+            label: 'Used AI to review (blue)',
             data: exp.map(d => ({ x: d.stateAnxiety, y: d.ruminationScore })),
             backgroundColor: PRD_COLOR_AI,
             borderColor: PRD_COLOR_AI_BORDER,
             pointRadius: 5
         }] : []),
         ...(prdShowControl && ctrl.length ? [{
-            label: 'Control (Paper-Based)',
+            label: 'Paper/Review sheet (red)',
             data: ctrl.map(d => ({ x: d.stateAnxiety, y: d.ruminationScore })),
             backgroundColor: PRD_COLOR_CONTROL,
             borderColor: PRD_COLOR_CONTROL_BORDER,
@@ -511,7 +511,7 @@ function createPrdInteractionRumination(data) {
     ];
     if (regExp && prdShowAI) {
         datasets.push({
-            label: 'AI regression',
+            label: 'AI review regression',
             data: [{ x: xMin, y: regExp.slope * xMin + regExp.intercept }, { x: xMax, y: regExp.slope * xMax + regExp.intercept }],
             type: 'line',
             borderColor: PRD_COLOR_AI_BORDER,
@@ -523,7 +523,7 @@ function createPrdInteractionRumination(data) {
     }
     if (regCtrl && prdShowControl) {
         datasets.push({
-            label: 'Control regression',
+            label: 'Paper/Review sheet regression',
             data: [{ x: xMin, y: regCtrl.slope * xMin + regCtrl.intercept }, { x: xMax, y: regCtrl.slope * xMax + regCtrl.intercept }],
             type: 'line',
             borderColor: PRD_COLOR_CONTROL_BORDER,
@@ -561,14 +561,14 @@ function createPrdInteractionRecovery(data) {
     const xMin = 0, xMax = Math.max(30, ...data.map(d => d.stateAnxiety).filter(Boolean)) || 30;
     const datasets = [
         ...(prdShowAI && exp.length ? [{
-            label: 'Experimental (AI Tutor)',
+            label: 'Used AI to review (blue)',
             data: exp.map(d => ({ x: d.stateAnxiety, y: d.recoveryScore })),
             backgroundColor: PRD_COLOR_AI,
             borderColor: PRD_COLOR_AI_BORDER,
             pointRadius: 5
         }] : []),
         ...(prdShowControl && ctrl.length ? [{
-            label: 'Control (Paper-Based)',
+            label: 'Paper/Review sheet (red)',
             data: ctrl.map(d => ({ x: d.stateAnxiety, y: d.recoveryScore })),
             backgroundColor: PRD_COLOR_CONTROL,
             borderColor: PRD_COLOR_CONTROL_BORDER,
@@ -577,7 +577,7 @@ function createPrdInteractionRecovery(data) {
     ];
     if (regExp && prdShowAI) {
         datasets.push({
-            label: 'AI regression',
+            label: 'AI review regression',
             data: [{ x: xMin, y: regExp.slope * xMin + regExp.intercept }, { x: xMax, y: regExp.slope * xMax + regExp.intercept }],
             type: 'line',
             borderColor: PRD_COLOR_AI_BORDER,
@@ -589,7 +589,7 @@ function createPrdInteractionRecovery(data) {
     }
     if (regCtrl && prdShowControl) {
         datasets.push({
-            label: 'Control regression',
+            label: 'Paper/Review sheet regression',
             data: [{ x: xMin, y: regCtrl.slope * xMin + regCtrl.intercept }, { x: xMax, y: regCtrl.slope * xMax + regCtrl.intercept }],
             type: 'line',
             borderColor: PRD_COLOR_CONTROL_BORDER,
@@ -631,8 +631,8 @@ function createPrdRuminationScale(data) {
         data: {
             labels,
             datasets: [
-                ...(prdShowAI ? [{ label: 'Experimental (AI Tutor)', data: expCounts, backgroundColor: PRD_COLOR_AI, borderColor: PRD_COLOR_AI_BORDER }] : []),
-                ...(prdShowControl ? [{ label: 'Control (Paper-Based)', data: ctrlCounts, backgroundColor: PRD_COLOR_CONTROL, borderColor: PRD_COLOR_CONTROL_BORDER }] : [])
+                ...(prdShowAI ? [{ label: 'Used AI to review (blue)', data: expCounts, backgroundColor: PRD_COLOR_AI, borderColor: PRD_COLOR_AI_BORDER }] : []),
+                ...(prdShowControl ? [{ label: 'Paper/Review sheet (red)', data: ctrlCounts, backgroundColor: PRD_COLOR_CONTROL, borderColor: PRD_COLOR_CONTROL_BORDER }] : [])
             ]
         },
         options: {
