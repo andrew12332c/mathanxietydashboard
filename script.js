@@ -374,8 +374,11 @@ function createPrdRuminationBars(data) {
                 x: {
                     min: -3,
                     max: 3,
-                    title: { display: true, text: 'Positive thoughts ← → Negative thoughts' },
-                    ticks: { callback: (v) => v === 0 ? 'Neutral' : v > 0 ? 'Positive' : 'Negative' }
+                    title: { display: true, text: 'Rumination scale (−3 = negative thoughts ← → +3 = positive thoughts)' },
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(v) { return Number(v); }
+                    }
                 }
             }
         }

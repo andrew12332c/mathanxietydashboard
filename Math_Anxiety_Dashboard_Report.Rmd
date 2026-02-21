@@ -263,13 +263,15 @@ AI tutor buffers negative thoughts; control shows deeper negative rumination.
 rum_means <- d %>% filter(!is.na(rumination_score)) %>%
   group_by(condition) %>%
   summarise(mean_rum = mean(rumination_score), .groups = "drop")
-rum_means$bar_val <- (rum_means$mean_rum - 4) * 1.5  # center for pos/neg display
+rum_means$bar_val <- (rum_means$mean_rum - 4) * 1.5  # center at 0: scale -3 (negative) to +3 (positive)
 if (nrow(rum_means) > 0) {
   ggplot(rum_means, aes(x = condition, y = bar_val, fill = condition)) +
     geom_col() +
     scale_fill_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
     geom_hline(yintercept = 0, linewidth = 0.5) +
-    labs(x = "", y = "Post-Event Rumination (positive ← → negative)", title = "B1. Post-Event Rumination") +
+    scale_y_continuous(breaks = seq(-3, 3, 1), limits = c(-3.5, 3.5),
+                      name = "Rumination scale (−3 = negative thoughts ← → +3 = positive thoughts)") +
+    labs(x = "", title = "B1. Post-Event Rumination") +
     theme_minimal() + theme(legend.position = "none")
 }
 ```
