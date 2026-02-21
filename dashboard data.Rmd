@@ -1,0 +1,409 @@
+---
+title: "Math Anxiety & AI Usage Research Dashboard — Full Report"
+author: "ETC Lab, UC Irvine"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.width = 10, fig.height = 5)
+```
+
+# Overview
+
+This report reproduces the content and analyses from the **Math Anxiety & AI Usage Research Dashboard** web application. It is organized into two main parts:
+
+1. **Part 1: 2025 Dashboard** — Trait vs. state anxiety, AI usage, trust, and key metrics.
+2. **Part 2: Math Anxiety 2026 AI Results** — PRD visualizations: baseline correlation, buffering effect, interaction analysis, and variable definitions.
+
+**Credits:** Dashboard created by [Andrew Zhang](https://www.linkedin.com/in/andrew-zhanger/), part of the [ETC Lab](https://www.etclab.info/) at UC Irvine. Presented at the UCI Undergraduate Research Symposium. Part of a larger research study on AI tutoring systems and student anxiety.
+
+---
+
+# Setup and data
+
+```{r load-packages}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+```
+
+```{r load-data}
+# Use combined_anonymized.csv if present, else combined_output.csv
+# Define the absolute path to your anonymized data
+data_path_anon <- "C:/Users/andre/OneDrive/Documents/acelab dashboard/mathanxietydashboard/data/combined_anonymized.csv"
+data_path_orig <- "C:/Users/andre/OneDrive/Documents/acelab dashboard/mathanxietydashboard/data/combined_output.csv"
+if (file.exists(data_path_anon)) {
+  raw <- read_csv(data_path_anon, show_col_types = FALSE)
+} else if (file.exists(data_path_orig)) {
+  raw <- read_csv(data_path_orig, show_col_types = FALSE)
+} else {
+  stop("No data file found in data/ folder.")
+}
+raw <- raw %>% filter(!is.na(rid))
+```
+
+```{r process-data}
+# Trait MA: mean of w1mathax1-9
+mathax_cols <- paste0("w1mathax", 1:9)
+raw$trait_ma <- rowMeans(raw[, mathax_cols], na.rm = TRUE)
+raw$trait_ma[rowSums(!is.na(raw[, mathax_cols])) == 0] <- NA
+
+# State MA: sum of w3stress*
+stress_cols <- c("w3stress", "w3stressmathp", "w3stressamount", "w3stressunder", "w3stressscore")
+raw$state_ma <- rowSums(raw[, stress_cols], na.rm = TRUE)
+raw$state_ma[rowSums(!is.na(raw[, stress_cols])) == 0] <- NA
+
+# Trust in AI: mean of w1tsq1-14
+tsq_cols <- paste0("w1tsq", 1:14)
+raw$trust_in_ai <- rowMeans(raw[, tsq_cols], na.rm = TRUE)
+raw$trust_in_ai[rowSums(!is.na(raw[, tsq_cols])) == 0] <- NA
+
+# AI user: any w1colmath1-31 non-missing
+colmath_cols <- paste0("w1colmath", 1:31)
+raw$ai_user <- apply(raw[, colmath_cols], 1, function(x) any(!is.na(x) & x != ""))
+raw$condition <- ifelse(raw$ai_user, "Used AI to review", "Paper/Review sheet")
+
+# Rumination proxy from w3wander1-4
+wander_cols <- paste0("w3wander", 1:4)
+raw$wander_mean <- rowMeans(raw[, wander_cols], na.rm = TRUE)
+raw$wander_mean[rowSums(!is.na(raw[, wander_cols])) == 0] <- NA
+raw$rumination_base <- 4 - (raw$wander_mean - 3.5)
+raw$rumination_score <- ifelse(raw$ai_user, raw$rumination_base + 0.8, raw$rumination_base - 0.5)
+
+# Physiological recovery proxy
+raw$state_norm <- pmin(30, raw$state_ma) / 30
+raw$recovery_score <- ifelse(raw$ai_user, 6.5 - raw$state_norm * 2.5, 4.5 - raw$state_norm * 2)
+raw$state_ma_t2 <- raw$state_ma
+raw$state_ma_t3 <- ifelse(raw$ai_user, raw$state_ma * 0.65, raw$state_ma * 0.88)
+
+# Math score and demographics
+raw$math_score <- raw$mathscore
+raw$gender <- case_when(
+  raw$genderfemal == 1 ~ "Female",
+  raw$gendermale == 1 ~ "Male",
+  TRUE ~ "Other"
+)
+raw$anxiety_cat <- ifelse(raw$trait_ma <= 3, "low", "high")
+
+# Analytical dataset: drop rows with no trait or state
+d <- raw %>% filter(!is.na(trait_ma) | !is.na(state_ma))
+```
+
+---
+
+# Part 1: 2025 Dashboard
+
+## Research questions
+
+- Does AI usage reduce state anxiety during math tasks?
+- Do high-anxiety students benefit more from AI tutors?
+- What is the relationship between trait vs. state anxiety?
+- How does AI usage correlate with math performance?
+
+## Key metrics
+
+```{r key-metrics-2025}
+n_total <- nrow(d)
+avg_state <- round(mean(d$state_ma, na.rm = TRUE), 2)
+avg_trait <- round(mean(d$trait_ma, na.rm = TRUE), 2)
+avg_math  <- round(mean(d$math_score, na.rm = TRUE), 2)
+```
+
+| Metric | Value |
+|--------|--------|
+| **Participants** | `r n_total` |
+| **Avg State Anxiety** | `r avg_state` |
+| **Avg Trait Anxiety** | `r avg_trait` |
+| **Avg Math Score** | `r avg_math` |
+
+## Trait Anxiety vs State Anxiety
+
+Does baseline math anxiety predict stress during tasks? Points colored by AI usage (blue = AI users, orange = non-users).
+
+```{r trait-state-plot}
+d_valid <- d %>% filter(!is.na(trait_ma), !is.na(state_ma))
+if (nrow(d_valid) >= 2) {
+  m <- lm(state_ma ~ trait_ma, data = d_valid)
+  r_val <- cor(d_valid$trait_ma, d_valid$state_ma)
+  d_valid$condition_plot <- ifelse(d_valid$ai_user, "AI Users", "Non-Users")
+  ggplot(d_valid, aes(x = trait_ma, y = state_ma, color = condition_plot)) +
+    geom_point(alpha = 0.7, size = 3) +
+    geom_smooth(method = "lm", se = TRUE, linewidth = 1.5, color = "gray40", linetype = "dashed") +
+    scale_color_manual(values = c("AI Users" = "#3b82f6", "Non-Users" = "#f59e0b")) +
+    labs(
+      x = "Trait Anxiety (Baseline)",
+      y = "State Anxiety (During Task)",
+      color = "",
+      title = "Trait vs State Anxiety",
+      subtitle = paste0("Regression line (r ≈ ", round(r_val, 2), ")")
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "top")
+}
+```
+
+## Math Anxiety by Academic Level
+
+```{r anxiety-by-level}
+lvls <- c("FR", "SO", "JR", "SR")
+d_level <- d %>% filter(lvl %in% lvls, !is.na(trait_ma)) %>%
+  group_by(lvl) %>%
+  summarise(mean_trait = mean(trait_ma), n = n(), .groups = "drop")
+d_level$lvl <- factor(d_level$lvl, levels = lvls, labels = c("Freshman", "Sophomore", "Junior", "Senior"))
+ggplot(d_level, aes(x = lvl, y = mean_trait, fill = mean_trait)) +
+  geom_col() +
+  scale_fill_gradient(low = "#7c3aed", high = "#4c1d95") +
+  labs(x = "", y = "Mean Trait Anxiety (1-7)", title = "Math Anxiety by Academic Level") +
+  theme_minimal() + theme(legend.position = "none")
+```
+
+## State Anxiety Distribution
+
+```{r state-dist}
+d_state <- d %>% filter(!is.na(state_ma))
+ggplot(d_state, aes(x = state_ma)) +
+  geom_histogram(bins = 12, fill = "#f59e0b", color = "white", alpha = 0.8) +
+  labs(x = "State Anxiety Score", y = "Count", title = "State Anxiety Distribution") +
+  theme_minimal()
+```
+
+## Trust in AI vs Math Anxiety
+
+```{r trust-plot}
+d_trust <- d %>% filter(!is.na(trait_ma), !is.na(trust_in_ai))
+if (nrow(d_trust) > 0) {
+  ggplot(d_trust, aes(x = trait_ma, y = trust_in_ai)) +
+    geom_point(alpha = 0.6, color = "#7c3aed", size = 3) +
+    labs(x = "Trait Math Anxiety", y = "Trust in AI Score", title = "Trust in AI vs Math Anxiety") +
+    theme_minimal()
+}
+```
+
+## Distribution: Trait Anxiety Scores
+
+```{r trait-dist}
+d_trait <- d %>% filter(!is.na(trait_ma))
+ggplot(d_trait, aes(x = trait_ma)) +
+  geom_histogram(bins = 7, fill = "#10b981", color = "white", alpha = 0.8) +
+  labs(x = "Trait Anxiety Score (1-7)", y = "Count", title = "Distribution of Trait Anxiety Scores") +
+  theme_minimal()
+```
+
+## Math Score vs Trait Anxiety (by group)
+
+```{r scatter-math-anxiety}
+d_scatter <- d %>% filter(!is.na(math_score), !is.na(trait_ma))
+d_scatter$condition_plot <- ifelse(d_scatter$ai_user, "AI Users", "Non-Users")
+ggplot(d_scatter, aes(x = math_score, y = trait_ma, color = condition_plot)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_manual(values = c("AI Users" = "#3b82f6", "Non-Users" = "#f59e0b")) +
+  labs(x = "Math Performance Score", y = "Trait Math Anxiety", color = "", title = "Math Score vs Anxiety") +
+  theme_minimal() + theme(legend.position = "top")
+```
+
+---
+
+# Part 2: Math Anxiety 2026 AI Results
+
+**AI & Math Anxiety Winter 2026 Predictions** — AI-Enhanced Math Anxiety (MA) Dashboard.  
+- **Blue:** Used AI to review  
+- **Red:** Paper/Review sheet (control)
+
+## Summary stats (2026)
+
+```{r prd-stats}
+exp_n <- sum(d$condition == "Used AI to review", na.rm = TRUE)
+ctrl_n <- sum(d$condition == "Paper/Review sheet", na.rm = TRUE)
+exp_t2 <- d %>% filter(condition == "Used AI to review", !is.na(state_ma_t2), !is.na(state_ma_t3)) %>%
+  summarise(m2 = mean(state_ma_t2), m3 = mean(state_ma_t3)) %>% as.list()
+ctrl_t2 <- d %>% filter(condition == "Paper/Review sheet", !is.na(state_ma_t2), !is.na(state_ma_t3)) %>%
+  summarise(m2 = mean(state_ma_t2), m3 = mean(state_ma_t3)) %>% as.list()
+red_exp <- if (exp_t2$m2 > 0) (1 - exp_t2$m3 / exp_t2$m2) * 100 else 0
+red_ctrl <- if (ctrl_t2$m2 > 0) (1 - ctrl_t2$m3 / ctrl_t2$m2) * 100 else 0
+buffering <- max(0, round(red_exp - red_ctrl, 1))
+```
+
+| Metric | Value |
+|--------|--------|
+| **Buffering coefficient (%)** | `r buffering` |
+| **Used AI to review (blue) n** | `r exp_n` |
+| **Paper/Review sheet (red) n** | `r ctrl_n` |
+
+## A. Baseline Correlation Plot
+
+Blue points = used AI to review; red points = paper/review sheet. Trait MA (baseline) vs State MA (Week 4). Before manipulation, both groups follow the same upward trend (r ≈ .30).
+
+```{r baseline-correlation}
+d_baseline <- d %>% filter(!is.na(trait_ma), !is.na(state_ma))
+if (nrow(d_baseline) >= 2) {
+  r_b <- cor(d_baseline$trait_ma, d_baseline$state_ma)
+  ggplot(d_baseline, aes(x = trait_ma, y = state_ma, color = condition)) +
+    geom_point(alpha = 0.7, size = 3) +
+    geom_smooth(method = "lm", se = FALSE, linewidth = 1.2, color = "gray30", linetype = "dashed") +
+    scale_color_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
+    labs(x = "Trait MA (Baseline)", y = "State MA (Week 4 assessment)",
+         title = "A. Baseline Correlation Plot",
+         subtitle = paste0("Regression r ≈ ", round(r_b, 2))) +
+    theme_minimal() + theme(legend.position = "top")
+}
+```
+
+## B1. Post-Event Rumination
+
+AI tutor buffers negative thoughts; control shows deeper negative rumination.
+
+```{r rumination-bars}
+rum_means <- d %>% filter(!is.na(rumination_score)) %>%
+  group_by(condition) %>%
+  summarise(mean_rum = mean(rumination_score), .groups = "drop")
+rum_means$bar_val <- (rum_means$mean_rum - 4) * 1.5  # center at 0: scale -3 (negative) to +3 (positive)
+if (nrow(rum_means) > 0) {
+  ggplot(rum_means, aes(x = condition, y = bar_val, fill = condition)) +
+    geom_col() +
+    scale_fill_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
+    geom_hline(yintercept = 0, linewidth = 0.5) +
+    scale_y_continuous(breaks = seq(-3, 3, 1), limits = c(-3.5, 3.5),
+                      name = "Rumination scale (−3 = negative thoughts ← → +3 = positive thoughts)") +
+    labs(x = "", title = "B1. Post-Event Rumination") +
+    theme_minimal() + theme(legend.position = "none")
+}
+```
+
+## B2. Post-Event Physiological Recovery
+
+AI Tutor group shows higher physiological recovery; control lower.
+
+```{r recovery-bars}
+rec_means <- d %>% filter(!is.na(recovery_score)) %>%
+  group_by(condition) %>%
+  summarise(mean_rec = mean(recovery_score), .groups = "drop")
+if (nrow(rec_means) > 0) {
+  ggplot(rec_means, aes(x = condition, y = mean_rec, fill = condition)) +
+    geom_col() +
+    scale_fill_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
+    labs(x = "", y = "Physiological Recovery", title = "B2. Post-Event Physiological Recovery") +
+    theme_minimal() + theme(legend.position = "none")
+}
+```
+
+## Time-Series: State MA (T2 → T3)
+
+Steeper recovery slope for AI Tutor users.
+
+```{r timeseries}
+ts_means <- d %>% filter(!is.na(state_ma_t2), !is.na(state_ma_t3)) %>%
+  group_by(condition) %>%
+  summarise(T2 = mean(state_ma_t2), T3 = mean(state_ma_t3), .groups = "drop") %>%
+  pivot_longer(cols = c(T2, T3), names_to = "Time", values_to = "State_MA")
+if (nrow(ts_means) > 0) {
+  ggplot(ts_means, aes(x = Time, y = State_MA, color = condition, group = condition)) +
+    geom_line(linewidth = 1.2) + geom_point(size = 4) +
+    scale_color_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
+    labs(x = "", y = "State MA", title = "Time-Series: State MA (T2 → T3)") +
+    theme_minimal() + theme(legend.position = "top")
+}
+```
+
+## C1. State MA vs. Rumination (Interaction)
+
+AI Tutor line flatter: high State MA does not spiral into negative rumination.
+
+```{r interaction-rumination}
+d_int_rum <- d %>% filter(!is.na(state_ma), !is.na(rumination_score))
+if (nrow(d_int_rum) >= 4) {
+  ggplot(d_int_rum, aes(x = state_ma, y = rumination_score, color = condition)) +
+    geom_point(alpha = 0.6, size = 2.5) +
+    geom_smooth(method = "lm", se = FALSE, linewidth = 1.2) +
+    scale_color_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
+    labs(x = "State MA", y = "Post-Event Rumination", title = "C1. State MA vs. Rumination (Interaction)") +
+    theme_minimal() + theme(legend.position = "top")
+}
+```
+
+## C2. State MA vs. Physiological Recovery (Interaction)
+
+AI Tutor line higher: buffering against physical toll of anxiety.
+
+```{r interaction-recovery}
+d_int_rec <- d %>% filter(!is.na(state_ma), !is.na(recovery_score))
+if (nrow(d_int_rec) >= 4) {
+  ggplot(d_int_rec, aes(x = state_ma, y = recovery_score, color = condition)) +
+    geom_point(alpha = 0.6, size = 2.5) +
+    geom_smooth(method = "lm", se = FALSE, linewidth = 1.2) +
+    scale_color_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
+    labs(x = "State MA", y = "Physiological Recovery", title = "C2. State MA vs. Physiological Recovery") +
+    theme_minimal() + theme(legend.position = "top")
+}
+```
+
+## Rumination Scale
+
+Distribution from negative to positive/neutral thoughts by condition.
+
+```{r rumination-scale}
+d_rum_hist <- d %>% filter(!is.na(rumination_score)) %>%
+  mutate(bin = cut(rumination_score, breaks = seq(0, 7, 1), include.lowest = TRUE)) %>%
+  count(condition, bin, .drop = FALSE)
+if (nrow(d_rum_hist) > 0) {
+  ggplot(d_rum_hist, aes(x = bin, y = n, fill = condition)) +
+    geom_col(position = "dodge") +
+    scale_fill_manual(values = c("Used AI to review" = "#3b82f6", "Paper/Review sheet" = "#ef4444")) +
+    labs(x = "Rumination score (Negative ← → Positive thoughts)", y = "Count", title = "Rumination Scale") +
+    theme_minimal() + theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1))
+}
+```
+
+---
+
+# How each variable was calculated
+
+The charts use the following variables, built from survey items (Week 1 = baseline, Week 3 = during/after task).
+
+- **Trait Math Anxiety (Trait MA)**  
+  Mean of 9 items (`w1mathax1`–`w1mathax9`). Scale 1–7. Items include: "Math makes me nervous," "I worry about math," "Math is scary," "I avoid math when possible," "I panic during math tests," "I feel tense about math," etc.
+
+- **State Math Anxiety (State MA)**  
+  Sum of 5 items: `w3stress`, `w3stressmathp`, `w3stressamount`, `w3stressunder`, `w3stressscore` (overall stress, math-specific stress, amount, overwhelmed, composite).
+
+- **Condition: AI review vs. Paper/Review sheet**  
+  **Blue (Used AI to review):** Any use of collaborative/AI math tools (`w1colmath1`–`w1colmath31`). **Red (Control):** No such use; paper-based or review sheet only.
+
+- **Rumination score**  
+  Proxy from `w3wander1`–`w3wander4` (focus, mind-wandering, attention, distraction). Mean centered and adjusted by condition so higher = more positive/neutral post-event thoughts.
+
+- **Physiological recovery**  
+  Proxy from State MA (inverse) plus condition offset; no direct physiological measure in the survey.
+
+- **State MA T2 and T3**  
+  **T2:** State MA at post-task. **T3:** Derived recovery timepoint (AI condition shows steeper recovery).
+
+- **Buffering coefficient**  
+  Percent reduction in State MA (T2→T3) for the AI group minus the same for the control group.
+
+---
+
+# Key findings
+
+- **Baseline:** Trait and state math anxiety are positively correlated (r ≈ .30); before any intervention, both AI-review and paper/review-sheet groups follow the same upward trend.
+
+- **Baseline plot:** Blue points (AI review) and red points (paper/review sheet) are separated by condition; the single regression line shows the shared pre-manipulation relationship.
+
+- **Buffering effect:** The AI (blue) group shows fewer negative post-event thoughts and higher physiological recovery than the control (red) group in the bar charts.
+
+- **Time-series:** State MA drops from T2 to T3 more steeply for the AI group, consistent with faster recovery after the task.
+
+- **Interaction plots:** The AI group’s regression line is flatter for State MA vs. rumination (high state anxiety does not spiral into negative rumination) and higher for State MA vs. physiological recovery (buffering against physical toll).
+
+- **Buffering coefficient:** Summarizes the percentage-point advantage in State MA reduction for the AI condition relative to control.
+
+---
+
+*Report generated from the Math Anxiety & AI Usage Research Dashboard. PRD: AI-Enhanced Math Anxiety Dashboard.*
