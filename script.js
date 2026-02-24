@@ -18,11 +18,18 @@ document.addEventListener('DOMContentLoaded', function() {
     setupTabNavigation();
 });
 
+// Base path for assets (works when site is in a subpath, e.g. GitHub Pages)
+function getBasePath() {
+    const href = window.location.href.split('?')[0].split('#')[0];
+    return href.endsWith('/') ? href : href.replace(/\/[^/]*$/, '/');
+}
+
 // Load and parse CSV data (try anonymized first, fallback to combined_output)
 async function loadData() {
+    const base = getBasePath();
     try {
-        let response = await fetch('data/combined_anonymized.csv');
-        if (!response.ok) response = await fetch('data/combined_output.csv');
+        let response = await fetch(base + 'data/combined_anonymized.csv');
+        if (!response.ok) response = await fetch(base + 'data/combined_output.csv');
         const csvText = await response.text();
         
         Papa.parse(csvText, {
