@@ -94,36 +94,42 @@
                 <h3>Trait Anxiety vs State Anxiety</h3>
                 <p class="viz-description">Does baseline math anxiety predict stress during tasks?</p>
                 <canvas id="traitStateChart"></canvas>
+                <p class="viz-notes"><strong>How to read:</strong> Each point is a student; the x‑axis shows trait math anxiety at baseline (1–7), and the y‑axis shows state anxiety during the Week 3 task. <strong>Takeaway:</strong> Higher baseline anxiety generally predicts higher in‑the‑moment stress during math, supporting a stable anxiety profile.</p>
             </div>
 
             <div class="viz-card">
                 <h3>Math Anxiety by Academic Level</h3>
                 <p class="viz-description">How does anxiety vary across year in school?</p>
                 <canvas id="anxietyByLevelChart"></canvas>
+                <p class="viz-notes"><strong>How to read:</strong> The x‑axis shows academic level (e.g., first‑year through senior), and the y‑axis shows average trait math anxiety. <strong>Takeaway:</strong> Compare bar heights to see whether certain year levels experience systematically higher or lower math anxiety.</p>
             </div>
 
             <div class="viz-card">
                 <h3>State Anxiety Distribution</h3>
                 <p class="viz-description">How anxious were students during the math task?</p>
                 <canvas id="stateDistributionChart"></canvas>
+                <p class="viz-notes"><strong>How to read:</strong> The x‑axis shows binned state anxiety scores during the task, and the y‑axis shows how many students fall in each bin. <strong>Takeaway:</strong> The shape of the distribution indicates whether most students clustered at low, moderate, or high in‑the‑moment stress.</p>
             </div>
 
             <div class="viz-card">
                 <h3>Trust in AI vs Math Anxiety</h3>
                 <p class="viz-description">Do anxious students trust AI more or less?</p>
                 <canvas id="trustChart"></canvas>
+                <p class="viz-notes"><strong>How to read:</strong> The x‑axis shows trait math anxiety and the y‑axis shows average trust in AI scores. <strong>Takeaway:</strong> The slope indicates whether more anxious students tend to be more skeptical of AI tools or, alternatively, lean on AI as a coping resource.</p>
             </div>
 
             <div class="viz-card full-width">
                 <h3>Distribution: Trait Anxiety Scores</h3>
                 <p class="viz-description">Overall distribution of math anxiety in the sample</p>
                 <canvas id="distributionChart"></canvas>
+                <p class="viz-notes"><strong>How to read:</strong> The x‑axis shows trait math anxiety (1–7) and the y‑axis shows the number of students at each level. <strong>Takeaway:</strong> This helps identify whether the cohort skews toward low, moderate, or high chronic math anxiety.</p>
             </div>
 
             <div class="viz-card full-width">
                 <h3>Interactive Scatter: Math Score vs Anxiety (Hover for details)</h3>
                 <p class="viz-description">Each dot is a student - AI users in blue, non-users in orange</p>
                 <div id="scatterPlot"></div>
+                <p class="viz-notes"><strong>How to read:</strong> The x‑axis plots math scores and the y‑axis plots anxiety; each point is one student, colored by AI usage. <strong>Takeaway:</strong> Compare the clouds to see whether AI users (blue) achieve similar or higher performance at comparable anxiety levels relative to non‑users (orange).</p>
             </div>
         </div>
 
@@ -179,6 +185,7 @@
                     <div class="chart-wrap">
                         <canvas id="prd-baseline-correlation"></canvas>
                     </div>
+                    <p class="viz-notes"><strong>How to read:</strong> X‑axis = trait math anxiety at baseline; y‑axis = state anxiety during the Week 4 assessment; points are split by condition (blue AI, red control) with a single regression line. <strong>Takeaway:</strong> Before any intervention, both groups share a similar positive trait–state relationship (higher baseline anxiety → higher in‑task anxiety), so later differences can be interpreted as effects of the review condition.</p>
                 </div>
 
                 <div class="viz-card">
@@ -187,6 +194,7 @@
                     <div class="chart-wrap">
                         <canvas id="prd-rumination-bars"></canvas>
                     </div>
+                    <p class="viz-notes"><strong>How to read:</strong> This horizontal bar chart uses a scaled rumination score where negative values mean more negative post‑event thoughts and positive values mean more positive/neutral thoughts. <strong>Takeaway:</strong> The AI group’s bar is shifted toward the positive side, suggesting fewer lingering negative thoughts compared to the control group.</p>
                 </div>
                 <div class="viz-card">
                     <h3>B2. Post-Event Physiological Recovery</h3>
@@ -194,6 +202,7 @@
                     <div class="chart-wrap">
                         <canvas id="prd-recovery-bars"></canvas>
                     </div>
+                    <p class="viz-notes"><strong>How to read:</strong> X‑axis = simulated physiological recovery score from 0 (not recovered) to 8 (fully recovered); each bar is the group average. <strong>Takeaway:</strong> The AI tutor group’s bar is further to the right, indicating stronger post‑event recovery relative to the control condition.</p>
                 </div>
 
                 <div class="viz-card full-width">
@@ -202,6 +211,7 @@
                     <div class="chart-wrap">
                         <canvas id="prd-timeseries-state-ma"></canvas>
                     </div>
+                    <p class="viz-notes"><strong>How to read:</strong> The x‑axis shows two timepoints (T2 = immediately post‑task, T3 = later recovery) and the y‑axis shows mean state math anxiety for each group. <strong>Takeaway:</strong> The AI group’s line drops more steeply from T2 to T3, consistent with faster anxiety recovery than the control group.</p>
                 </div>
 
                 <div class="viz-card">
@@ -210,6 +220,7 @@
                     <div class="chart-wrap">
                         <canvas id="prd-interaction-rumination"></canvas>
                     </div>
+                    <p class="viz-notes"><strong>How to read:</strong> X‑axis = state math anxiety; y‑axis = rumination score, with separate lines for AI and control groups. <strong>Takeaway:</strong> The flatter AI line indicates that even when in‑task anxiety is high, AI users do not escalate into as much negative rumination as the control group.</p>
                 </div>
                 <div class="viz-card">
                     <h3>C2. State MA vs. Physiological Recovery (Interaction)</h3>
@@ -217,6 +228,7 @@
                     <div class="chart-wrap">
                         <canvas id="prd-interaction-recovery"></canvas>
                     </div>
+                    <p class="viz-notes"><strong>How to read:</strong> X‑axis = state math anxiety; y‑axis = physiological recovery score, with AI and control lines. <strong>Takeaway:</strong> Across the range of anxiety, the AI line sits higher, suggesting that AI users retain better physiological recovery than controls at comparable anxiety levels.</p>
                 </div>
 
                 <div class="viz-card full-width">
@@ -225,6 +237,7 @@
                     <div class="chart-wrap">
                         <canvas id="prd-rumination-scale"></canvas>
                     </div>
+                    <p class="viz-notes"><strong>How to read:</strong> The x‑axis shows the transformed rumination scale from more negative to more positive/neutral thoughts, and the y‑axis shows the density or proportion for each condition. <strong>Takeaway:</strong> The AI group’s distribution shifts toward the positive side, reinforcing the idea that AI buffers against lingering negative post‑event thinking.</p>
                 </div>
             </div>
 
